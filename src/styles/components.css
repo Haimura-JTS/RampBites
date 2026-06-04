@@ -1,0 +1,348 @@
+/**
+ * Component Styles - Botones, Formularios, Modales, Etc.
+ * 
+ * ETAPA 0: Estructura definida
+ * ETAPA 1: Será implementado
+ */
+
+/* Botones */
+.btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  
+  &:hover {
+    background-color: darken(var(--primary-color), 10%);
+  }
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+  
+  &:hover {
+    background-color: darken(var(--secondary-color), 10%);
+  }
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+  
+  &:hover {
+    background-color: darken(var(--success-color), 10%);
+  }
+}
+
+.btn-warning {
+  background-color: var(--warning-color);
+  color: white;
+  
+  &:hover {
+    background-color: darken(var(--warning-color), 10%);
+  }
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+  
+  &:hover {
+    background-color: darken(var(--danger-color), 10%);
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+  
+  &:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-sm);
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: var(--font-size-lg);
+}
+
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  
+  .btn {
+    flex: 1;
+  }
+}
+
+/* Tarjetas */
+.card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .card-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+  
+  .card-body {
+    margin-bottom: 1rem;
+  }
+  
+  .card-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+}
+
+/* Formularios */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  
+  &:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(212, 82, 60, 0.1);
+  }
+  
+  &.is-invalid {
+    border-color: var(--danger-color);
+  }
+  
+  &.is-valid {
+    border-color: var(--success-color);
+  }
+}
+
+.form-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--gray);
+}
+
+.form-error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--danger-color);
+}
+
+/* Modales */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  
+  &.show {
+    display: flex;
+  }
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    
+    h2 {
+      margin: 0;
+    }
+    
+    .close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  }
+  
+  .modal-body {
+    margin-bottom: 1.5rem;
+  }
+  
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+}
+
+/* Toast/Notificaciones */
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-lg);
+  max-width: 400px;
+  z-index: 2000;
+  animation: slideIn 0.3s ease;
+  
+  &.toast-success {
+    border-left: 4px solid var(--success-color);
+  }
+  
+  &.toast-warning {
+    border-left: 4px solid var(--warning-color);
+  }
+  
+  &.toast-danger {
+    border-left: 4px solid var(--danger-color);
+  }
+  
+  &.toast-info {
+    border-left: 4px solid var(--info-color);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  
+  &.badge-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  &.badge-success {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  &.badge-warning {
+    background-color: var(--warning-color);
+    color: white;
+  }
+  
+  &.badge-danger {
+    background-color: var(--danger-color);
+    color: white;
+  }
+}
+
+/* Tablas */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  
+  th {
+    background-color: var(--dark);
+    color: white;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  tbody tr:hover {
+    background-color: rgba(212, 82, 60, 0.05);
+  }
+}
+
+/* Loading */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

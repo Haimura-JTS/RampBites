@@ -1,0 +1,165 @@
+/**
+ * Layout Styles - Grid/Flexbox Principal
+ * 
+ * ETAPA 0: Estructura definida
+ * ETAPA 1: Será implementado
+ */
+
+.app-container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
+.app-header {
+  background: linear-gradient(135deg, #d4523c 0%, #f5a623 100%);
+  color: white;
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  
+  h1 {
+    margin: 0;
+    font-size: 2.5rem;
+  }
+  
+  .subtitle {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+  }
+}
+
+.app-main {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-footer {
+  background-color: var(--dark);
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  
+  p {
+    margin: 0.5rem 0;
+  }
+  
+  a {
+    color: var(--secondary-color);
+  }
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  background-color: var(--dark);
+  color: white;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.sidebar-item {
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  &.active {
+    background-color: var(--primary-color);
+  }
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  
+  &.center {
+    justify-content: center;
+  }
+  
+  &.space-between {
+    justify-content: space-between;
+  }
+}
+
+.col {
+  flex: 1;
+  min-width: 250px;
+  
+  &.full {
+    flex-basis: 100%;
+  }
+  
+  &.half {
+    flex-basis: 50%;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header {
+    h1 {
+      font-size: 1.75rem;
+    }
+  }
+  
+  .app-main {
+    padding: 1rem;
+  }
+  
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  
+  .content-grid,
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .col.half {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 1rem;
+    h1 {
+      font-size: 1.25rem;
+    }
+    .subtitle {
+      font-size: 0.875rem;
+    }
+  }
+  
+  .app-main {
+    padding: 0.5rem;
+  }
+  
+  .row {
+    gap: 0.5rem;
+  }
+}
