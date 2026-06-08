@@ -2,33 +2,31 @@
 
 ## Checkpoint Actual
 
-Etapa cerrada: **ETAPA 12 - Seguridad local**.
+Etapa cerrada: **ETAPA 13 - Reservas de stock en pedidos**.
 
 Fecha: 2026-06-08.
 
 ## Completado
 
-- Se ordeno el repo antes de continuar:
-  - commit creado: `1cba96c feat: complete Ramp Bites MVP through API mirror`,
-  - push realizado a `origin/main`.
 - Se leyeron `README.md`, `CHANGELOG.md` y `TODO_NEXT_STAGE.md` antes de modificar.
-- Se agrego `src/auth.js` con:
-  - PIN admin hasheado con salt,
-  - verificacion de PIN,
-  - sesion admin en `sessionStorage`,
-  - bloqueo/desbloqueo local,
-  - estado textual de seguridad.
-- Se agrego `settings.security` al modelo normalizado.
-- Se agrego panel `Seguridad local` en Configuracion.
-- Se protegen cuando la seguridad esta activa:
-  - importacion JSON,
-  - reset demo,
-  - restauracion de backups,
-  - enviar local al backend,
-  - traer backend a local,
-  - cargar seed backend.
-- Se actualizo version visible a `0.12.0`, `APP_STAGE` a Etapa 12 y cache PWA a `0.12.0`.
-- Se agrego `tests/auth.test.js`.
+- Se agregaron tipos de movimiento:
+  - `reserva`,
+  - `liberacion_reserva`.
+- Confirmar pedido, pasarlo a `en_produccion` o `listo` reserva stock disponible.
+- Cancelar pedido o volverlo a `pendiente` / `borrador` libera la reserva activa.
+- Entregar pedido convierte la reserva en venta:
+  - crea `liberacion_reserva`,
+  - crea `venta`,
+  - mantiene trazabilidad por lote.
+- Si se entrega un pedido sin reserva previa, se reserva primero y luego se convierte en venta.
+- Se evita editar pedidos con stock reservado para no romper trazabilidad.
+- La planificacion/lista de compra no vuelve a contar necesidades de pedidos ya reservados.
+- La pantalla Pedidos muestra:
+  - metrica `Reservados`,
+  - badge `reservado`,
+  - regla de stock actualizada.
+- Se actualizo version visible a `0.13.0`, `APP_STAGE` a Etapa 13 y cache PWA a `0.13.0`.
+- Se ampliaron tests de pedidos para reserva, liberacion, entrega y reconfirmacion.
 
 ## Archivos Modificados
 
@@ -37,23 +35,23 @@ Fecha: 2026-06-08.
 - `TODO_NEXT_STAGE.md`
 - `package.json`
 - `service-worker.js`
-- `src/auth.js`
+- `src/calculations.js`
 - `src/constants.js`
 - `src/main.js`
 - `src/models.js`
 - `src/services/businessService.js`
-- `src/views/settingsView.js`
-- `tests/auth.test.js`
+- `src/views/ordersView.js`
+- `tests/orders.test.js`
 - `tests/pwa.test.js`
-- `tests/settingsBackend.test.js`
 - `docs/ARCHITECTURE.md`
 - `docs/BACKEND_PLAN.md`
 - `docs/INDEX.md`
+- `docs/QA_CHECKLIST.md`
 - `docs/ROADMAP.md`
 
 ## Verificacion
 
-- `npm.cmd test` pasa correctamente: 43/43.
+- `npm.cmd test` pasa correctamente: 45/45.
 - `node --check` paso para JS/MJS de `src/`, `server/` y `scripts/`.
 - Prueba HTTP basica del dev server en `http://127.0.0.1:5199/index.html`:
   - status `200`,
@@ -66,19 +64,18 @@ No hay siguiente prompt obligatorio definido.
 
 Opciones razonables para una proxima etapa:
 
+- sincronizacion por coleccion en vez de reemplazo completo,
 - roles activos en UI/API,
 - autenticacion backend real,
-- reservas de stock al confirmar pedido,
 - resolver conflictos entre LocalStorage y SQLite,
-- sincronizacion por coleccion en vez de reemplazo completo,
-- adaptar `server/api.js` a Express si se acepta dependencia.
+- adaptar `server/api.js` a Express si se acepta dependencia,
+- mejorar reportes especificos de reservas y compromisos de stock.
 
 ## Riesgos o Bugs Pendientes
 
-- La seguridad local ayuda contra acciones accidentales, pero no es autenticacion backend real.
-- El PIN vive en datos locales como hash con salt; quien tenga control total del navegador/dispositivo puede manipular LocalStorage.
+- La reserva usa movimientos de stock y funciona en uso local; no hay control de concurrencia multiusuario.
+- Si dos navegadores editan contra el mismo backend en modo espejo, pueden pisarse reservas.
 - El modo `api_mirror` reemplaza el dataset completo del backend en cada guardado local.
-- No hay control de concurrencia; no usar simultaneamente varios navegadores editando el mismo backend.
+- La seguridad local ayuda contra acciones accidentales, pero no es autenticacion backend real.
 - Express no esta instalado; la API usa `node:http` para seguir sin dependencias externas.
 - `node:sqlite` emite aviso experimental en Node 24.
-- No hay reservas de stock al confirmar pedido; se descuenta al entregar.

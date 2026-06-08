@@ -204,7 +204,11 @@ export const MODEL_DEFINITIONS = {
     estimatedProfit: 'number',
     paid: 'boolean',
     paymentMethod: 'efectivo | bizum | transferencia | otro',
-    notes: 'string'
+    notes: 'string',
+    stockReserved: 'boolean',
+    stockReservedAt: 'ISO_DATE | null',
+    stockReservationReleasedAt: 'ISO_DATE | null',
+    stockMovementsCreated: 'boolean'
   },
   OrderItem: {
     recipeId: 'string',
@@ -236,7 +240,9 @@ export const MODEL_DEFINITIONS = {
     cookedFridgeMaxDays: 'number',
     cookedFrozenMaxDays: 'number',
     lowStockThreshold: 'number',
-    demoMode: 'boolean'
+    demoMode: 'boolean',
+    backend: 'object',
+    security: 'object'
   }
 };
 

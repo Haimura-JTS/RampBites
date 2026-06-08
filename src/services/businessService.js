@@ -776,6 +776,9 @@ export function saveOrder(data, input) {
   if (existing?.stockMovementsCreated) {
     return failure(['Pedido ya entregado con stock descontado. Crea un ajuste manual si necesitas corregir stock.']);
   }
+  if (existing?.stockReserved) {
+    return failure(['Pedido con stock reservado: cambia estado o cancela para liberar antes de editar.']);
+  }
 
   const orderInput = {
     ...input,
@@ -824,11 +827,17 @@ export function saveOrder(data, input) {
     paymentMethod: input.paymentMethod || PAYMENT_METHODS.CASH,
     notes: input.notes?.trim() ?? '',
     stockReserved: false,
+    stockReservedAt: null,
+    stockReservationReleasedAt: null,
     stockMovementsCreated: false,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now
   };
 
+  if (shouldReserveOrderStatus(order.status)) {
+    const reservation = reserveOrderStock(data, order, now);
+    if (!reservation.ok) return reservation;
+  }
   upsertInPlace(data.orders, order);
   updateClientStats(data, order.clientId);
   touch(data);
@@ -843,8 +852,17 @@ export function setOrderStatus(data, orderId, status) {
   if (!order) return failure(['Pedido no encontrado.']);
   if (order.stockMovementsCreated) return failure(['Pedido entregado: no se puede cambiar el estado sin ajuste manual.']);
 
+  const now = new Date().toISOString();
+  if (shouldReserveOrderStatus(status) && !order.stockReserved) {
+    const reservation = reserveOrderStock(data, order, now);
+    if (!reservation.ok) return reservation;
+  }
+  if (!shouldReserveOrderStatus(status) && order.stockReserved) {
+    releaseOrderStock(data, order, now, status === ORDER_STATUS.CANCELLED ? 'cancelacion' : 'cambio_estado');
+  }
+
   order.status = status;
-  order.updatedAt = new Date().toISOString();
+  order.updatedAt = now;
   touch(data);
   return success(data, order);
 }
@@ -864,22 +882,19 @@ export function deliverOrder(data, orderId) {
   if (!order) return failure(['Pedido no encontrado.']);
   if (order.stockMovementsCreated) return failure(['Este pedido ya desconto stock.']);
 
-  const stockByProduct = calculateStockByProduct(data.stockMovements);
-  const needs = calculateOrderIngredientNeeds(order, data.recipes, data.products);
-  const shortages = needs
-    .map((need) => ({
-      ...need,
-      available: Number(stockByProduct[need.productId] ?? 0),
-      shortage: Math.max((Number(need.quantity) || 0) - Number(stockByProduct[need.productId] ?? 0), 0)
-    }))
-    .filter((need) => need.shortage > 0);
-
-  if (shortages.length > 0) {
-    return failure(shortages.map((need) => `Stock insuficiente para ${need.productName}: faltan ${need.shortage} ${need.unit}.`));
+  const now = new Date().toISOString();
+  if (!order.stockReserved) {
+    const reservation = reserveOrderStock(data, order, now);
+    if (!reservation.ok) return reservation;
   }
 
-  const now = new Date().toISOString();
-  const movements = createSaleMovements(data, order, needs, now);
+  const reservationMovements = getActiveReservationMovements(data, order.id);
+  const releaseMovements = createReservationReleaseMovements(order, reservationMovements, now, 'entrega');
+  data.stockMovements.push(...releaseMovements);
+  order.stockReserved = false;
+  order.stockReservationReleasedAt = now;
+
+  const movements = createSaleMovementsFromReservations(data, order, reservationMovements, now);
   data.stockMovements.push(...movements);
   order.status = ORDER_STATUS.DELIVERED;
   order.deliveredAt = now;
@@ -987,7 +1002,70 @@ function createOrderNumber(data, orderDate) {
   return `PED-${date}-${String(sequence).padStart(3, '0')}`;
 }
 
-function createSaleMovements(data, order, needs, now) {
+function shouldReserveOrderStatus(status) {
+  return [ORDER_STATUS.CONFIRMED, ORDER_STATUS.IN_PRODUCTION, ORDER_STATUS.READY].includes(status);
+}
+
+function reserveOrderStock(data, order, now) {
+  const stockByProduct = calculateStockByProduct(data.stockMovements);
+  const needs = calculateOrderIngredientNeeds(order, data.recipes, data.products);
+  const shortages = needs
+    .map((need) => ({
+      ...need,
+      available: Number(stockByProduct[need.productId] ?? 0),
+      shortage: Math.max((Number(need.quantity) || 0) - Number(stockByProduct[need.productId] ?? 0), 0)
+    }))
+    .filter((need) => need.shortage > 0);
+
+  if (shortages.length > 0) {
+    return failure(shortages.map((need) => `Stock insuficiente para reservar ${need.productName}: faltan ${need.shortage} ${need.unit}.`));
+  }
+
+  const movements = createReservationMovements(data, order, needs, now);
+  data.stockMovements.push(...movements);
+  order.stockReserved = true;
+  order.stockReservedAt = now;
+  order.stockReservationReleasedAt = null;
+  return success(data, order);
+}
+
+function releaseOrderStock(data, order, now, reason = 'liberacion') {
+  const reservationMovements = getActiveReservationMovements(data, order.id);
+  const releaseMovements = createReservationReleaseMovements(order, reservationMovements, now, reason);
+  data.stockMovements.push(...releaseMovements);
+  order.stockReserved = false;
+  order.stockReservationReleasedAt = now;
+  return releaseMovements;
+}
+
+function getActiveReservationMovements(data, orderId) {
+  const reservations = new Map();
+
+  for (const movement of data.stockMovements) {
+    if (movement.referenceId !== orderId || movement.referenceType !== 'order') continue;
+    const isReservation = movement.type === MOVEMENT_TYPES.RESERVATION;
+    const isRelease = movement.type === MOVEMENT_TYPES.RESERVATION_RELEASE;
+    if (!isReservation && !isRelease) continue;
+
+    const lotId = isRelease
+      ? movement.toLotId || movement.lotId || ''
+      : movement.fromLotId || movement.lotId || '';
+    const key = [movement.productId, lotId, movement.unit].join('::');
+    const current = reservations.get(key) ?? {
+      productId: movement.productId,
+      unit: movement.unit,
+      fromLotId: lotId,
+      lotId,
+      quantity: 0
+    };
+    current.quantity += isReservation ? Number(movement.quantity) || 0 : -(Number(movement.quantity) || 0);
+    reservations.set(key, current);
+  }
+
+  return [...reservations.values()].filter((movement) => movement.quantity > 0.000001);
+}
+
+function createReservationMovements(data, order, needs, now) {
   const stockByLot = calculateStockByLot(data.stockMovements);
   const movements = [];
 
@@ -1004,7 +1082,7 @@ function createSaleMovements(data, order, needs, now) {
       const quantity = Math.min(available, remaining);
       movements.push(createMovement({
         productId: need.productId,
-        type: MOVEMENT_TYPES.SALE,
+        type: MOVEMENT_TYPES.RESERVATION,
         quantity,
         unit: need.unit || product?.baseUnit || '',
         direction: -1,
@@ -1012,7 +1090,7 @@ function createSaleMovements(data, order, needs, now) {
         referenceId: order.id,
         referenceType: 'order',
         date: now,
-        notes: `Venta ${order.orderNumber} - ${need.productName}`
+        notes: `Reserva ${order.orderNumber} - ${need.productName}`
       }));
       remaining -= quantity;
     }
@@ -1020,19 +1098,52 @@ function createSaleMovements(data, order, needs, now) {
     if (remaining > 0) {
       movements.push(createMovement({
         productId: need.productId,
-        type: MOVEMENT_TYPES.SALE,
+        type: MOVEMENT_TYPES.RESERVATION,
         quantity: remaining,
         unit: need.unit || product?.baseUnit || '',
         direction: -1,
         referenceId: order.id,
         referenceType: 'order',
         date: now,
-        notes: `Venta ${order.orderNumber} - ${need.productName}`
+        notes: `Reserva ${order.orderNumber} - ${need.productName}`
       }));
     }
   }
 
   return movements;
+}
+
+function createReservationReleaseMovements(order, reservationMovements, now, reason) {
+  return reservationMovements.map((movement) => createMovement({
+    productId: movement.productId,
+    type: MOVEMENT_TYPES.RESERVATION_RELEASE,
+    quantity: movement.quantity,
+    unit: movement.unit,
+    direction: 1,
+    toLotId: movement.fromLotId || movement.lotId || '',
+    referenceId: order.id,
+    referenceType: 'order',
+    date: now,
+    notes: `Libera reserva ${order.orderNumber} - ${reason}`
+  }));
+}
+
+function createSaleMovementsFromReservations(data, order, reservationMovements, now) {
+  return reservationMovements.map((movement) => {
+    const product = data.products.find((item) => item.id === movement.productId);
+    return createMovement({
+      productId: movement.productId,
+      type: MOVEMENT_TYPES.SALE,
+      quantity: movement.quantity,
+      unit: movement.unit || product?.baseUnit || '',
+      direction: -1,
+      fromLotId: movement.fromLotId || movement.lotId || '',
+      referenceId: order.id,
+      referenceType: 'order',
+      date: now,
+      notes: `Venta ${order.orderNumber} - desde reserva`
+    });
+  });
 }
 
 function compareLotsForConsumption(a, b) {

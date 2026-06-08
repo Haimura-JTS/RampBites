@@ -187,5 +187,5 @@ Futuro:
 - Ternera sigue en standby/premium hasta cambio explicito.
 - Carne cocida con fecha de coccion y fecha limite de uso.
 - No afirmar cumplimiento legal alimentario.
-- Stock se descuenta con movimientos trazables.
+- Stock se reserva y descuenta con movimientos trazables.
 - Producciones finalizadas no se corrigen sin ajuste trazable.

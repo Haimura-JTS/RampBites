@@ -678,7 +678,7 @@ function bindOrderActions() {
       const data = getData();
       const order = data.orders.find((item) => item.id === button.dataset.id);
       if (!order) return showToast('Pedido no encontrado.', 'danger');
-      if (button.dataset.status === ORDER_STATUS.DELIVERED && !window.confirm('Entregar pedido y descontar stock definitivamente?')) return;
+      if (button.dataset.status === ORDER_STATUS.DELIVERED && !window.confirm('Entregar pedido y convertir reserva en venta definitiva?')) return;
       const result = button.dataset.status === ORDER_STATUS.DELIVERED
         ? deliverOrder(data, button.dataset.id)
         : setOrderStatus(data, button.dataset.id, button.dataset.status);

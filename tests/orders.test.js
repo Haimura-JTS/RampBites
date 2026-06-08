@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSeedData } from '../src/seed.js';
 import { calculateOrderTotals, calculateShoppingList, calculateStockByProduct } from '../src/calculations.js';
-import { deliverOrder, markOrderPaid, saveOrder, savePurchase } from '../src/services/businessService.js';
+import { deliverOrder, markOrderPaid, saveOrder, savePurchase, setOrderStatus } from '../src/services/businessService.js';
 
 test('guardar pedido calcula total, coste y ganancia desde receta', () => {
   const data = createSeedData();
@@ -48,16 +48,20 @@ test('entregar pedido descuenta stock y registra venta trazable', () => {
     paymentMethod: 'bizum'
   });
   assert.equal(saved.ok, true);
+  assert.equal(saved.item.stockReserved, true);
 
   const delivered = deliverOrder(saved.data, saved.item.id);
   assert.equal(delivered.ok, true);
   assert.equal(delivered.item.status, 'entregado');
+  assert.equal(delivered.item.stockReserved, false);
   assert.equal(delivered.item.stockMovementsCreated, true);
 
   const stock = calculateStockByProduct(delivered.data.stockMovements);
   assert.equal(stock['prod-pork-cooked-neutral'], 600);
   assert.equal(stock['prod-tortilla'], 8);
   assert.equal(stock['prod-paper-bag-consum'], 28);
+  assert.equal(delivered.data.stockMovements.filter((movement) => movement.referenceId === delivered.item.id && movement.type === 'reserva').length > 0, true);
+  assert.equal(delivered.data.stockMovements.filter((movement) => movement.referenceId === delivered.item.id && movement.type === 'liberacion_reserva').length > 0, true);
   assert.equal(delivered.data.stockMovements.filter((movement) => movement.referenceId === delivered.item.id && movement.type === 'venta').length > 0, true);
 
   const paid = markOrderPaid(delivered.data, delivered.item.id, true, 'bizum');
@@ -71,13 +75,66 @@ test('entregar pedido falla si falta stock', () => {
     clientId: 'client-demo-001',
     orderDate: '2026-06-05',
     deliveryDate: '2026-06-05',
-    status: 'confirmado',
+    status: 'pendiente',
     items: [{ recipeId: 'recipe-pork-standard', quantity: 1, unitPrice: 5 }]
   });
 
   const delivered = deliverOrder(saved.data, saved.item.id);
   assert.equal(delivered.ok, false);
   assert.match(delivered.errors.join(' '), /Stock insuficiente/);
+});
+
+test('confirmar pedido reserva stock y cancelar libera reserva', () => {
+  const data = createSeedData();
+  addBurritoInputStock(data);
+  const saved = saveOrder(data, {
+    clientId: 'client-demo-001',
+    orderDate: '2026-06-05',
+    deliveryDate: '2026-06-05',
+    status: 'pendiente',
+    items: [{ recipeId: 'recipe-pork-standard', quantity: 2, unitPrice: 5 }]
+  });
+
+  assert.equal(saved.ok, true);
+  const confirmed = setOrderStatus(saved.data, saved.item.id, 'confirmado');
+  assert.equal(confirmed.ok, true);
+  assert.equal(confirmed.item.stockReserved, true);
+  assert.equal(confirmed.data.stockMovements.filter((movement) => movement.referenceId === confirmed.item.id && movement.type === 'reserva').length > 0, true);
+
+  const reservedStock = calculateStockByProduct(confirmed.data.stockMovements);
+  assert.equal(reservedStock['prod-pork-cooked-neutral'], 600);
+  assert.equal(reservedStock['prod-tortilla'], 8);
+
+  const cancelled = setOrderStatus(confirmed.data, confirmed.item.id, 'cancelado');
+  assert.equal(cancelled.ok, true);
+  assert.equal(cancelled.item.stockReserved, false);
+  assert.equal(cancelled.data.stockMovements.filter((movement) => movement.referenceId === cancelled.item.id && movement.type === 'liberacion_reserva').length > 0, true);
+
+  const releasedStock = calculateStockByProduct(cancelled.data.stockMovements);
+  assert.equal(releasedStock['prod-pork-cooked-neutral'], 800);
+  assert.equal(releasedStock['prod-tortilla'], 10);
+});
+
+test('reconfirmar despues de liberar no duplica reservas al entregar', () => {
+  const data = createSeedData();
+  addBurritoInputStock(data);
+  const saved = saveOrder(data, {
+    clientId: 'client-demo-001',
+    orderDate: '2026-06-05',
+    deliveryDate: '2026-06-05',
+    status: 'pendiente',
+    items: [{ recipeId: 'recipe-pork-standard', quantity: 1, unitPrice: 5 }]
+  });
+
+  const firstConfirm = setOrderStatus(saved.data, saved.item.id, 'confirmado');
+  const pendingAgain = setOrderStatus(firstConfirm.data, firstConfirm.item.id, 'pendiente');
+  const secondConfirm = setOrderStatus(pendingAgain.data, pendingAgain.item.id, 'confirmado');
+  const delivered = deliverOrder(secondConfirm.data, secondConfirm.item.id);
+
+  assert.equal(delivered.ok, true);
+  const stock = calculateStockByProduct(delivered.data.stockMovements);
+  assert.equal(stock['prod-pork-cooked-neutral'], 700);
+  assert.equal(stock['prod-tortilla'], 9);
 });
 
 test('lista de compra detecta faltantes de pedidos proximos', () => {

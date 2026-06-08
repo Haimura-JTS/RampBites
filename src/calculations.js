@@ -318,8 +318,13 @@ export function calculateOrderPlanning(orders = [], recipes = [], products = [],
     expectedRevenue += orderTotals.total;
     estimatedCost += orderTotals.estimatedCost;
 
+    if (!order.stockReserved || options.includeReservedNeeds) {
+      for (const item of order.items ?? []) {
+        planningOrder.items.push(item);
+      }
+    }
+
     for (const item of order.items ?? []) {
-      planningOrder.items.push(item);
       const current = totalsByRecipe.get(item.recipeId) ?? 0;
       totalsByRecipe.set(item.recipeId, current + (Number(item.quantity) || 0));
     }

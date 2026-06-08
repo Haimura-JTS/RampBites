@@ -69,8 +69,10 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Crear pedido rapido.
 - Agregar extras y quitar ingredientes.
 - Cambiar estados.
+- Confirmar pedido y comprobar movimiento `reserva`.
+- Cancelar pedido confirmado y comprobar movimiento `liberacion_reserva`.
 - Marcar pagado.
-- Entregar pedido y confirmar descuento de stock.
+- Entregar pedido y confirmar conversion de reserva en `venta`.
 - Intentar entregar sin stock y confirmar error.
 - Registrar feedback.
 
@@ -97,7 +99,7 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 
 ## Riesgos Aceptados en MVP
 
-- No hay reservas de stock al confirmar pedido.
+- No hay control de concurrencia multiusuario para reservas.
 - LocalStorage puede borrarse desde el navegador.
 - Backup restaurable vive en el mismo navegador.
 - No sustituye cumplimiento legal alimentario.

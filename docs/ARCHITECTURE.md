@@ -215,7 +215,7 @@ Colecciones:
 - Las compras crean lote, movimiento e historial de precio.
 - Las producciones consumen lote crudo y generan lote cocido.
 - La saborizacion transforma carne neutra en saborizada con movimientos.
-- Los pedidos descuentan stock al marcar `entregado`.
+- Los pedidos reservan stock al confirmar, liberan al cancelar y convierten reserva en venta al entregar.
 - Los pedidos entregados no se editan; se corrigen con ajuste trazable.
 - Backups se crean antes de import, reset y restore.
 - El modo API espejo crea backup local antes de cargar datos del backend al iniciar.

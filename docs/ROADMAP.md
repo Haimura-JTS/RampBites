@@ -1,10 +1,10 @@
 # Roadmap
 
-Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 12 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional y seguridad local.
+Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 13 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, seguridad local y reservas de stock por pedido.
 
 ## MVP Local
 
-Estado: completado en Etapas 0-12.
+Estado: completado en Etapas 0-13.
 
 Incluye:
 
@@ -42,7 +42,8 @@ Incluye:
 - backups de base de datos,
 - sincronizacion manual LocalStorage/SQLite,
 - modo API espejo con carga inicial desde backend y envio automatico de guardados,
-- seguridad local con PIN admin para operaciones sensibles.
+- seguridad local con PIN admin para operaciones sensibles,
+- reservas de stock al confirmar pedidos y conversion a venta al entregar.
 
 ## Backend
 

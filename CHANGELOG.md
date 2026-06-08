@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## [Unreleased - Etapa 13] - 2026-06-08
+
+### Added
+
+- Reservas de stock al confirmar pedido o pasar a `en_produccion` / `listo`.
+- Movimientos de stock `reserva` y `liberacion_reserva`.
+- Liberacion automatica de reserva al cancelar pedido o volver a estados sin reserva.
+- Entrega desde reserva: libera reserva y crea movimientos `venta`.
+- Indicador visual `reservado` en la tabla de pedidos.
+- Metrica de pedidos reservados en la pantalla de Pedidos.
+- Tests de reserva, liberacion, entrega y reconfirmacion en `tests/orders.test.js`.
+
+### Changed
+
+- Version visible del proyecto actualizada a `0.13.0`.
+- `APP_STAGE` pasa a Etapa 13.
+- Cache PWA actualizado a `ramp-bites-control-panel-v0.13.0`.
+- La lista de compra evita contar dos veces pedidos que ya tienen stock reservado.
+
+### Fixed
+
+- Confirmar, liberar y volver a confirmar el mismo pedido ya no duplica reservas al entregar.
+
 ## [Unreleased - Etapa 12] - 2026-06-08
 
 ### Added
@@ -435,4 +458,5 @@ Durante el desarrollo inicial se usara version `0.x`.
 - `0.10.0`: sincronizacion manual frontend/backend desde Configuracion.
 - `0.11.0`: modo API espejo opcional con carga inicial y guardado automatico.
 - `0.12.0`: seguridad local con PIN admin para operaciones sensibles.
+- `0.13.0`: reservas de stock al confirmar pedidos.
 - `1.0.0`: primera version interna usable con exportacion/importacion y reportes basicos.

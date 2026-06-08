@@ -25,6 +25,7 @@ export function renderOrders({ data }) {
     toDate: tomorrow
   });
   const pendingOrders = data.orders.filter((order) => ['pendiente', 'confirmado', 'en_produccion', 'listo'].includes(order.status));
+  const reservedOrders = data.orders.filter((order) => order.stockReserved);
   const deliveredOrders = data.orders.filter((order) => order.status === ORDER_STATUS.DELIVERED);
   const pendingPayment = deliveredOrders
     .filter((order) => !order.paid)
@@ -40,7 +41,8 @@ export function renderOrders({ data }) {
     </section>
 
     <section class="metric-grid">
-      ${metric('Pendientes', pendingOrders.length, 'Sin descontar stock')}
+      ${metric('Pendientes', pendingOrders.length, 'Pedidos activos')}
+      ${metric('Reservados', reservedOrders.length, 'Stock apartado')}
       ${metric('Entregados', deliveredOrders.length, 'Stock descontado')}
       ${metric('Pendiente cobro', formatCurrency(pendingPayment), 'Entregados no pagados')}
       ${metric('Burritos proximos', upcomingPlanning.totalUnits, `${today} / ${tomorrow}`)}
@@ -101,7 +103,7 @@ export function renderOrders({ data }) {
         </form>
         <div class="alert alert-info">
           <strong>Regla de stock</strong>
-          <span>Borrador, pendiente y confirmado no descuentan stock. Entregado descuenta definitivamente.</span>
+          <span>Confirmado, en produccion y listo reservan stock. Cancelado libera reserva. Entregado convierte reserva en venta.</span>
         </div>
       </article>
     </section>
@@ -182,7 +184,7 @@ function orderRow(order, data) {
       <td>${formatCurrency(totals.total)}</td>
       <td>${formatCurrency(totals.estimatedCost)}</td>
       <td>${formatCurrency(totals.estimatedProfit)}<div class="muted">${formatPercent(totals.marginPercentage)}</div></td>
-      <td><span class="badge ${statusBadge(order.status)}">${escapeHtml(order.status)}</span></td>
+      <td><span class="badge ${statusBadge(order.status)}">${escapeHtml(order.status)}</span>${order.stockReserved ? '<div><span class="badge badge-info">reservado</span></div>' : ''}</td>
       <td><span class="badge ${order.paid ? 'badge-success' : 'badge-warning'}">${order.paid ? 'pagado' : 'pendiente'}</span><div class="muted">${escapeHtml(order.paymentMethod || '')}</div></td>
       <td class="action-cell">
         <button class="btn btn-small btn-secondary" data-action="edit-order" data-id="${escapeAttribute(order.id)}">Editar</button>

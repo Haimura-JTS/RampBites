@@ -4,9 +4,9 @@ Herramienta interna local-first para gestionar la produccion artesanal de burrit
 
 ## Estado del Proyecto
 
-Etapa actual: **ETAPA 12 - Seguridad local**.
+Etapa actual: **ETAPA 13 - Reservas de stock en pedidos**.
 
-La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable y proteccion local de operaciones sensibles.
+La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable, proteccion local de operaciones sensibles y reservas de stock al confirmar pedidos.
 
 ## Objetivo del Producto
 
@@ -134,6 +134,8 @@ Movimientos soportados:
 - `production_output`: salida generada por tanda.
 - `flavoring`: transformacion de neutro a saborizado.
 - `sale`: salida por pedido.
+- `reserva`: reserva temporal por pedido confirmado.
+- `liberacion_reserva`: liberacion de reserva por cancelacion, cambio de estado o entrega.
 - `waste`: descarte.
 - `shrinkage`: merma.
 - `own_consumption`: consumo propio.
@@ -233,10 +235,12 @@ Alertas de precio:
 3. Seleccionar recetas, cantidades, extras, ingredientes quitados y precio.
 4. Calcular subtotal, descuento, total, coste estimado, ganancia y margen.
 5. Comprobar stock disponible desde recetas.
-6. Mantener borrador, pendiente, confirmado, en produccion y listo sin descontar stock.
-7. Al marcar entregado, descontar stock definitivamente con movimientos tipo `venta`.
-8. Si falta stock, generar necesidades para lista de compra o produccion.
-9. Registrar feedback posterior a entrega.
+6. Mantener borrador y pendiente sin reservar stock.
+7. Al confirmar, pasar a produccion o marcar listo, reservar stock con movimientos `reserva`.
+8. Al cancelar o volver a pendiente/borrador, liberar reserva con movimientos `liberacion_reserva`.
+9. Al marcar entregado, convertir la reserva en movimientos `venta`.
+10. Si falta stock, generar necesidades para lista de compra o produccion.
+11. Registrar feedback posterior a entrega.
 
 ## Datos Seed Reales Iniciales
 
@@ -384,7 +388,8 @@ Alertas de precio:
 - **Etapa 10**: sincronizacion frontend/backend desde Configuracion. **Completada**.
 - **Etapa 11**: modo API espejo opcional con carga inicial desde SQLite y envio automatico de guardados. **Completada**.
 - **Etapa 12**: seguridad local opcional con PIN admin para operaciones sensibles. **Completada**.
-- **Etapa 13+**: autenticacion backend, multiusuario, roles activos y mejoras avanzadas.
+- **Etapa 13**: reservas de stock al confirmar pedidos y conversion a venta al entregar. **Completada**.
+- **Etapa 14+**: autenticacion backend, multiusuario, roles activos y mejoras avanzadas.
 
 ## Continuidad
 
@@ -531,7 +536,9 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 - `Clientes`: crear, editar, desactivar, buscar y ver historial resumido.
 - `Pedidos`: crear pedido completo con recetas, extras, ingredientes quitados, descuento, pago y estado.
 - `Pedido rapido`: crear una linea simple de cliente + receta + cantidad.
-- `Entregar`: descuenta stock definitivamente y crea movimientos `venta` con referencia al pedido.
+- `Confirmar`: reserva stock por lote cuando hay disponibilidad.
+- `Cancelar`: libera reservas activas del pedido.
+- `Entregar`: convierte la reserva en movimientos `venta` con referencia al pedido.
 - `Pedidos proximos`: resume necesidades de hoy y manana.
 - `Lista de compra automatica`: muestra faltantes segun pedidos proximos, stock y proveedor recomendado.
 - `Feedback`: registrar valoracion despues de entregar.
@@ -563,7 +570,7 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 
 ## QA
 
-- Tests automaticos: `npm.cmd test` (43 tests).
+- Tests automaticos: `npm.cmd test` (45 tests).
 - Checklist manual: `docs/QA_CHECKLIST.md`.
 - Backend futuro: `docs/BACKEND_PLAN.md`.
 - Roadmap: `docs/ROADMAP.md`.

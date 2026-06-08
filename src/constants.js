@@ -1,5 +1,5 @@
-export const APP_VERSION = '0.12.0';
-export const APP_STAGE = 'Etapa 12';
+export const APP_VERSION = '0.13.0';
+export const APP_STAGE = 'Etapa 13';
 export const STORAGE_KEY = 'ramp-bites-control-panel:v1';
 export const BACKUP_KEY = 'ramp-bites-control-panel:backup';
 export const SCHEMA_VERSION = 1;
@@ -67,6 +67,8 @@ export const MOVEMENT_TYPES = {
   PRODUCTION_CONSUME: 'produccion_consumo',
   PRODUCTION_OUTPUT: 'produccion_resultado',
   FLAVORING: 'saborizacion',
+  RESERVATION: 'reserva',
+  RESERVATION_RELEASE: 'liberacion_reserva',
   SALE: 'venta',
   ADJUSTMENT: 'ajuste',
   WASTE: 'merma',
