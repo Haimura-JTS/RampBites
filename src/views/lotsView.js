@@ -15,8 +15,9 @@ export function renderLots({ data }) {
     </section>
 
     <section class="metric-grid">
-      ${metric('Activos', counts.active, 'Con stock disponible')}
-      ${metric('Por vencer', counts.warning, 'Hoy, mañana o 2 dias')}
+      ${metric('Activos', counts.active, 'Con stock fisico')}
+      ${metric('Reservados', counts.reserved, 'Lotes comprometidos')}
+      ${metric('Por vencer', counts.warning, 'Hoy, manana o 2 dias')}
       ${metric('Vencidos', counts.expired, 'Revisar/descarte')}
       ${metric('Agotados/descartados', `${counts.empty}/${counts.discarded}`, 'Sin stock o anulados')}
     </section>
@@ -27,7 +28,9 @@ export function renderLots({ data }) {
           <tr>
             <th>Lote</th>
             <th>Producto</th>
-            <th>Stock restante</th>
+            <th>Fisico</th>
+            <th>Reservado</th>
+            <th>Disponible</th>
             <th>Coste 100 g</th>
             <th>Ubicacion</th>
             <th>Caducidad</th>
@@ -40,6 +43,8 @@ export function renderLots({ data }) {
             <tr>
               <td><strong>${escapeHtml(lot.lotCode)}</strong><div class="muted">${escapeHtml(lot.sourceType)} ${escapeHtml(lot.sourceId)}</div></td>
               <td>${escapeHtml(lot.product?.name ?? lot.productId)}</td>
+              <td>${formatQuantity(lot.physicalQuantity, lot.unit)}</td>
+              <td>${lot.reservedQuantity > 0 ? `<span class="badge badge-info">${formatQuantity(lot.reservedQuantity, lot.unit)}</span>` : formatQuantity(0, lot.unit)}</td>
               <td>${formatQuantity(lot.currentQuantity, lot.unit)}</td>
               <td>${lot.unit === 'g' ? formatCurrency((Number(lot.unitCost) || 0) * 100) : formatCurrency(lot.unitCost)}</td>
               <td>${escapeHtml(lot.location)}</td>
@@ -47,7 +52,7 @@ export function renderLots({ data }) {
               <td><span class="badge ${statusBadge(lot.computedStatus)}">${escapeHtml(statusLabel(lot.computedStatus))}</span></td>
               <td class="action-cell">
                 <button class="btn btn-small btn-secondary" data-action="view-lot" data-id="${escapeAttribute(lot.id)}">Detalle</button>
-                ${lot.computedStatus !== 'agotado' && lot.computedStatus !== 'descartado' ? `<button class="btn btn-small btn-danger" data-action="discard-lot" data-id="${escapeAttribute(lot.id)}">Descartar</button>` : ''}
+                ${canDiscardLot(lot) ? `<button class="btn btn-small btn-danger" data-action="discard-lot" data-id="${escapeAttribute(lot.id)}">Descartar</button>` : ''}
               </td>
             </tr>
           `).join('')}
@@ -59,13 +64,14 @@ export function renderLots({ data }) {
 
 function countByStatus(lots) {
   return lots.reduce((counts, lot) => {
+    if ((Number(lot.reservedQuantity) || 0) > 0) counts.reserved += 1;
     if (lot.computedStatus === 'agotado') counts.empty += 1;
     else if (lot.computedStatus === 'descartado') counts.discarded += 1;
     else if (lot.computedStatus === 'vencido') counts.expired += 1;
     else if (['vence_hoy', 'vence_manana', 'por_vencer', 'sin_fecha'].includes(lot.computedStatus)) counts.warning += 1;
     else counts.active += 1;
     return counts;
-  }, { active: 0, warning: 0, expired: 0, empty: 0, discarded: 0 });
+  }, { active: 0, reserved: 0, warning: 0, expired: 0, empty: 0, discarded: 0 });
 }
 
 function metric(label, value, hint) {
@@ -86,12 +92,19 @@ function statusLabel(status) {
     sin_fecha: 'sin fecha',
     por_vencer: 'por vencer',
     vence_hoy: 'vence hoy',
-    vence_manana: 'vence mañana',
+    vence_manana: 'vence manana',
     vencido: 'vencido',
     agotado: 'agotado',
     descartado: 'descartado'
   };
   return labels[status] ?? status;
+}
+
+function canDiscardLot(lot) {
+  return lot.computedStatus !== 'agotado'
+    && lot.computedStatus !== 'descartado'
+    && (Number(lot.currentQuantity) || 0) > 0
+    && (Number(lot.reservedQuantity) || 0) <= 0;
 }
 
 function formatQuantity(value, unit) {

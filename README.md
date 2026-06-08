@@ -4,9 +4,9 @@ Herramienta interna local-first para gestionar la produccion artesanal de burrit
 
 ## Estado del Proyecto
 
-Etapa actual: **ETAPA 13 - Reservas de stock en pedidos**.
+Etapa actual: **ETAPA 14 - Stock fisico, reservado y disponible**.
 
-La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable, proteccion local de operaciones sensibles y reservas de stock al confirmar pedidos.
+La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable, proteccion local de operaciones sensibles, reservas de stock al confirmar pedidos y separacion visual entre stock fisico, reservado y disponible.
 
 ## Objetivo del Producto
 
@@ -116,6 +116,12 @@ Cada entidad tendra:
 ## Reglas de Stock
 
 El stock se calcula desde movimientos, no desde valores sueltos editados a mano.
+
+- **Stock fisico**: inventario real antes de reservas; ignora `reserva` y `liberacion_reserva`.
+- **Stock reservado**: cantidad neta apartada por pedidos confirmados, en produccion o listos.
+- **Stock disponible**: stock fisico menos reservas activas; es el stock usado para simular, planificar, producir, descartar o vender.
+- Las alertas de stock bajo se calculan sobre stock disponible.
+- El valor estimado de inventario se calcula sobre stock fisico.
 
 Tipos de stock:
 
@@ -389,7 +395,8 @@ Alertas de precio:
 - **Etapa 11**: modo API espejo opcional con carga inicial desde SQLite y envio automatico de guardados. **Completada**.
 - **Etapa 12**: seguridad local opcional con PIN admin para operaciones sensibles. **Completada**.
 - **Etapa 13**: reservas de stock al confirmar pedidos y conversion a venta al entregar. **Completada**.
-- **Etapa 14+**: autenticacion backend, multiusuario, roles activos y mejoras avanzadas.
+- **Etapa 14**: stock fisico, reservado y disponible en UI, reportes y CSV. **Completada**.
+- **Etapa 15+**: autenticacion backend, multiusuario, roles activos y mejoras avanzadas.
 
 ## Continuidad
 
@@ -539,6 +546,8 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 - `Confirmar`: reserva stock por lote cuando hay disponibilidad.
 - `Cancelar`: libera reservas activas del pedido.
 - `Entregar`: convierte la reserva en movimientos `venta` con referencia al pedido.
+- `Stock`: muestra inventario fisico, reservado y disponible.
+- `Lotes`: muestra reservas por lote y bloquea descarte si hay reserva activa.
 - `Pedidos proximos`: resume necesidades de hoy y manana.
 - `Lista de compra automatica`: muestra faltantes segun pedidos proximos, stock y proveedor recomendado.
 - `Feedback`: registrar valoracion despues de entregar.
@@ -570,9 +579,9 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 
 ## QA
 
-- Tests automaticos: `npm.cmd test` (45 tests).
+- Tests automaticos: `npm.cmd test` (48 tests).
 - Checklist manual: `docs/QA_CHECKLIST.md`.
 - Backend futuro: `docs/BACKEND_PLAN.md`.
 - Roadmap: `docs/ROADMAP.md`.
 
-Ultima actualizacion: 2026-06-08.
+Ultima actualizacion: 2026-06-09.

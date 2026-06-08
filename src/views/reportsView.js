@@ -8,7 +8,9 @@ import {
   getCostReport,
   getPriceSupplierReport,
   getProductionReport,
-  getSalesReport
+  getSalesReport,
+  getStockCommitmentReport,
+  formatReportQuantity
 } from '../reports.js';
 import { escapeHtml } from '../html.js';
 
@@ -17,6 +19,7 @@ export function renderReports({ data }) {
   const sales = getSalesReport(data);
   const prices = getPriceSupplierReport(data);
   const costs = getCostReport(data);
+  const stockCommitments = getStockCommitmentReport(data);
 
   return `
     <section class="view-header">
@@ -32,7 +35,39 @@ export function renderReports({ data }) {
       ${productionSummary(production)}
       ${pricesSummary(prices)}
       ${costSummary(costs)}
+      ${stockCommitmentSummary(stockCommitments)}
     </section>
+
+    <article class="panel table-panel">
+      <div class="panel-header">
+        <h3>Stock comprometido</h3>
+        <span class="badge ${stockCommitments.metrics.reservedProducts ? 'badge-info' : 'badge-success'}">${stockCommitments.metrics.reservedProducts} reservados</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Fisico</th>
+            <th>Reservado</th>
+            <th>Disponible</th>
+            <th>Minimo</th>
+            <th>Valor fisico</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stockCommitments.rows.filter((row) => row.hasReservation || row.lowAvailable).map((row) => `
+            <tr>
+              <td><strong>${escapeHtml(row.productName)}</strong><div class="muted">${escapeHtml(row.category)} / ${escapeHtml(row.location)}</div></td>
+              <td>${formatReportQuantity(row.physicalQuantity, row.unit)}</td>
+              <td>${row.reservedQuantity > 0 ? `<span class="badge badge-info">${formatReportQuantity(row.reservedQuantity, row.unit)}</span>` : formatReportQuantity(0, row.unit)}</td>
+              <td><span class="${row.lowAvailable ? 'stock-low' : ''}">${formatReportQuantity(row.availableQuantity, row.unit)}</span></td>
+              <td>${formatReportQuantity(row.stockMinimum, row.unit)}</td>
+              <td>${formatCurrency(row.physicalValue)}</td>
+            </tr>
+          `).join('') || '<tr><td colspan="6">Sin reservas activas ni stock bajo disponible.</td></tr>'}
+        </tbody>
+      </table>
+    </article>
 
     <article class="panel table-panel">
       <div class="panel-header">
@@ -235,6 +270,20 @@ function costSummary(rows) {
         <div><dt>Con ganancia positiva</dt><dd>${profitable}</dd></div>
         <div><dt>Coste medio</dt><dd>${formatCurrency(average(rows.map((row) => row.cost)))}</dd></div>
         <div><dt>Margen medio</dt><dd>${formatPercent(average(rows.map((row) => row.marginPercentage)))}</dd></div>
+      </dl>
+    </article>
+  `;
+}
+
+function stockCommitmentSummary(report) {
+  return `
+    <article class="panel">
+      <div class="panel-header"><h3>Stock</h3></div>
+      <dl class="summary-list">
+        <div><dt>Valor fisico</dt><dd>${formatCurrency(report.metrics.physicalValue)}</dd></div>
+        <div><dt>Valor reservado</dt><dd>${formatCurrency(report.metrics.reservedValue)}</dd></div>
+        <div><dt>Valor disponible</dt><dd>${formatCurrency(report.metrics.availableValue)}</dd></div>
+        <div><dt>Bajo minimo disponible</dt><dd>${report.metrics.lowAvailableProducts}</dd></div>
       </dl>
     </article>
   `;

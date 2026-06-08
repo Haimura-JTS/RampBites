@@ -3,10 +3,16 @@ import assert from 'node:assert/strict';
 import {
   calculateFinalCostPer100g,
   calculateFinalCostPerGram,
+  calculateLotSummaries,
   calculateLimitingIngredient,
+  calculatePhysicalStockByProduct,
   calculatePossibleUnits,
   calculatePricePerKg,
   calculateRecipeCost,
+  calculateReservedStockByLot,
+  calculateReservedStockByProduct,
+  calculateStockByProduct,
+  calculateStockCommitments,
   calculateSuggestedPrices,
   calculateUnitCost,
   calculateWaste,
@@ -15,6 +21,7 @@ import {
   formatPercent,
   formatWeight
 } from '../src/calculations.js';
+import { MOVEMENT_TYPES } from '../src/constants.js';
 
 test('calcula coste unitario y precio por kg', () => {
   assert.equal(calculateUnitCost(26.21, 2385).toFixed(5), '0.01099');
@@ -64,6 +71,55 @@ test('calcula unidades posibles e ingrediente limitante', () => {
     required: 1,
     available: 3
   });
+});
+
+test('distingue stock fisico, reservado y disponible', () => {
+  const movements = [
+    {
+      productId: 'meat',
+      type: MOVEMENT_TYPES.PURCHASE,
+      quantity: 800,
+      unit: 'g',
+      direction: 1,
+      toLotId: 'lot-a'
+    },
+    {
+      productId: 'meat',
+      type: MOVEMENT_TYPES.RESERVATION,
+      quantity: 200,
+      unit: 'g',
+      direction: -1,
+      fromLotId: 'lot-a'
+    },
+    {
+      productId: 'meat',
+      type: MOVEMENT_TYPES.RESERVATION_RELEASE,
+      quantity: 50,
+      unit: 'g',
+      direction: 1,
+      toLotId: 'lot-a'
+    }
+  ];
+
+  assert.equal(calculatePhysicalStockByProduct(movements).meat, 800);
+  assert.equal(calculateReservedStockByProduct(movements).meat, 150);
+  assert.equal(calculateStockByProduct(movements).meat, 650);
+  assert.equal(calculateReservedStockByLot(movements)['lot-a'], 150);
+
+  const commitments = calculateStockCommitments(movements);
+  assert.equal(commitments.physicalByProduct.meat, 800);
+  assert.equal(commitments.reservedByProduct.meat, 150);
+  assert.equal(commitments.availableByProduct.meat, 650);
+
+  const [lot] = calculateLotSummaries(
+    [{ id: 'lot-a', productId: 'meat', lotCode: 'LOTE-A', unit: 'g', unitCost: 0.01, status: 'active' }],
+    movements,
+    [{ id: 'meat', name: 'Carne', baseUnit: 'g' }]
+  );
+  assert.equal(lot.physicalQuantity, 800);
+  assert.equal(lot.reservedQuantity, 150);
+  assert.equal(lot.currentQuantity, 650);
+  assert.equal(lot.computedStatus, 'sin_fecha');
 });
 
 test('formatea moneda, peso y porcentaje', () => {

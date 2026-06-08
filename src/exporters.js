@@ -1,4 +1,4 @@
-import { calculateStockByProduct, calculateStockValue, getProductUnitCost } from './calculations.js';
+import { calculateStockCommitments, calculateStockValue, getProductUnitCost } from './calculations.js';
 import { getCostReport, getProductionReport, getSalesReport } from './reports.js';
 
 export const CSV_EXPORT_TYPES = {
@@ -71,10 +71,12 @@ function productsCsv(data) {
 }
 
 function stockCsv(data) {
-  const stock = calculateStockByProduct(data.stockMovements);
-  const stockValue = calculateStockValue(data.products, stock);
+  const commitments = calculateStockCommitments(data.stockMovements);
+  const stockValue = calculateStockValue(data.products, commitments.physicalByProduct);
   const rows = data.products.map((product) => {
-    const quantity = Number(stock[product.id] ?? 0);
+    const physicalQuantity = Number(commitments.physicalByProduct[product.id] ?? 0);
+    const reservedQuantity = Number(commitments.reservedByProduct[product.id] ?? 0);
+    const availableQuantity = Number(commitments.availableByProduct[product.id] ?? 0);
     const unitCost = getProductUnitCost(product);
     return {
       id: product.id,
@@ -82,10 +84,12 @@ function stockCsv(data) {
       categoria: product.category,
       ubicacion: product.location,
       unidad: product.baseUnit,
-      stock: quantity,
+      stock_fisico: physicalQuantity,
+      stock_reservado: reservedQuantity,
+      stock_disponible: availableQuantity,
       minimo: product.stockMinimum,
       coste_unitario: unitCost,
-      valor: quantity * unitCost,
+      valor: physicalQuantity * unitCost,
       valor_total_stock: stockValue
     };
   });
@@ -95,7 +99,9 @@ function stockCsv(data) {
     { header: 'categoria', key: 'categoria' },
     { header: 'ubicacion', key: 'ubicacion' },
     { header: 'unidad', key: 'unidad' },
-    { header: 'stock', key: 'stock' },
+    { header: 'stock_fisico', key: 'stock_fisico' },
+    { header: 'stock_reservado', key: 'stock_reservado' },
+    { header: 'stock_disponible', key: 'stock_disponible' },
     { header: 'minimo', key: 'minimo' },
     { header: 'coste_unitario', key: 'coste_unitario' },
     { header: 'valor', key: 'valor' }

@@ -1,16 +1,21 @@
 import { MOVEMENT_TYPES } from '../constants.js';
-import { calculateLotSummaries, calculateStockByProduct, calculateStockValue, formatCurrency, formatWeight } from '../calculations.js';
-import { escapeAttribute, escapeHtml, option } from '../html.js';
+import { calculateLotSummaries, calculateStockCommitments, calculateStockValue, formatCurrency, formatWeight } from '../calculations.js';
+import { escapeHtml, option } from '../html.js';
 
 export function renderStock({ data }) {
-  const stock = calculateStockByProduct(data.stockMovements);
+  const commitments = calculateStockCommitments(data.stockMovements);
+  const stock = commitments.availableByProduct;
+  const physicalStock = commitments.physicalByProduct;
+  const reservedStock = commitments.reservedByProduct;
   const lotSummaries = calculateLotSummaries(data.lots, data.stockMovements, data.products);
-  const stockValue = calculateStockValue(data.products, stock);
+  const stockValue = calculateStockValue(data.products, physicalStock);
+  const reservedValue = calculateStockValue(data.products, reservedStock);
   const activeProducts = data.products.filter((product) => product.active);
   const lowStock = activeProducts.filter((product) => Number(product.stockMinimum) > 0 && (stock[product.id] ?? 0) <= product.stockMinimum);
   const withoutCost = activeProducts.filter((product) => !product.currentUnitCost && !product.estimatedUnitCost);
   const inFridge = activeProducts.filter((product) => product.location === 'nevera');
   const inFreezer = activeProducts.filter((product) => product.location === 'congelador');
+  const reservedProducts = activeProducts.filter((product) => (reservedStock[product.id] ?? 0) > 0);
 
   return `
     <section class="view-header">
@@ -22,7 +27,8 @@ export function renderStock({ data }) {
     </section>
 
     <section class="metric-grid">
-      ${metric('Valor estimado stock', formatCurrency(stockValue), 'Segun coste actual/estimado')}
+      ${metric('Valor stock fisico', formatCurrency(stockValue), 'Segun coste actual/estimado')}
+      ${metric('Stock reservado', reservedProducts.length, `${formatCurrency(reservedValue)} comprometidos`)}
       ${metric('Stock bajo', lowStock.length, 'Productos bajo minimo')}
       ${metric('Sin coste', withoutCost.length, 'Pendientes de compra real')}
       ${metric('Nevera / congelador', `${inFridge.length} / ${inFreezer.length}`, 'Productos ubicados')}
@@ -45,7 +51,7 @@ export function renderStock({ data }) {
             <label>Cantidad<input name="quantity" type="number" min="0" step="0.001" required></label>
             <label>Signo ajuste<select name="direction"><option value="1">Entrada</option><option value="-1">Salida</option></select></label>
           </div>
-          <label>Lote opcional<select name="lotId"><option value="">Sin lote</option>${lotSummaries.filter((lot) => lot.currentQuantity > 0).map((lot) => option(lot.id, `${lot.lotCode} - ${lot.product?.name ?? lot.productId} - ${formatQuantity(lot.currentQuantity, lot.unit)}`)).join('')}</select></label>
+          <label>Lote opcional<select name="lotId"><option value="">Sin lote</option>${lotSummaries.filter((lot) => lot.currentQuantity > 0).map((lot) => option(lot.id, `${lot.lotCode} - ${lot.product?.name ?? lot.productId} - disponible ${formatQuantity(lot.currentQuantity, lot.unit)}`)).join('')}</select></label>
           <label>Notas<input name="notes"></label>
           <div class="button-row">
             <button class="btn" type="submit">Registrar movimiento</button>
@@ -70,31 +76,37 @@ export function renderStock({ data }) {
             <th>Producto</th>
             <th>Categoria</th>
             <th>Ubicacion</th>
-            <th>Stock actual</th>
+            <th>Fisico</th>
+            <th>Reservado</th>
+            <th>Disponible</th>
             <th>Minimo</th>
             <th>Valor</th>
           </tr>
         </thead>
         <tbody>
-          ${activeProducts.map((product) => stockRow(product, stock)).join('')}
+          ${activeProducts.map((product) => stockRow(product, commitments)).join('')}
         </tbody>
       </table>
     </article>
   `;
 }
 
-function stockRow(product, stock) {
-  const quantity = stock[product.id] ?? 0;
+function stockRow(product, commitments) {
+  const physicalQuantity = commitments.physicalByProduct[product.id] ?? 0;
+  const reservedQuantity = commitments.reservedByProduct[product.id] ?? 0;
+  const availableQuantity = commitments.availableByProduct[product.id] ?? 0;
   const unitCost = product.currentUnitCost ?? product.estimatedUnitCost ?? 0;
-  const low = Number(product.stockMinimum) > 0 && quantity <= product.stockMinimum;
+  const low = Number(product.stockMinimum) > 0 && availableQuantity <= product.stockMinimum;
   return `
     <tr>
       <td>${escapeHtml(product.name)}</td>
       <td>${escapeHtml(product.category)}</td>
       <td>${escapeHtml(product.location)}</td>
-      <td><span class="${low ? 'stock-low' : ''}">${formatQuantity(quantity, product.baseUnit)}</span></td>
+      <td>${formatQuantity(physicalQuantity, product.baseUnit)}</td>
+      <td>${reservedQuantity > 0 ? `<span class="badge badge-info">${formatQuantity(reservedQuantity, product.baseUnit)}</span>` : formatQuantity(0, product.baseUnit)}</td>
+      <td><span class="${low ? 'stock-low' : ''}">${formatQuantity(availableQuantity, product.baseUnit)}</span></td>
       <td>${formatQuantity(product.stockMinimum, product.baseUnit)}</td>
-      <td>${formatCurrency(Math.max(quantity, 0) * unitCost)}</td>
+      <td>${formatCurrency(Math.max(physicalQuantity, 0) * unitCost)}</td>
     </tr>
   `;
 }

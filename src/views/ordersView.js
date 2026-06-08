@@ -226,7 +226,7 @@ function planningCard(title, planning) {
       </dl>
       <h4>Necesidades</h4>
       <table class="data-table">
-        <thead><tr><th>Producto</th><th>Necesario</th><th>Stock</th><th>Faltante</th></tr></thead>
+        <thead><tr><th>Producto</th><th>Necesario</th><th>Disponible</th><th>Faltante</th></tr></thead>
         <tbody>
           ${planning.availability.map((item) => `
             <tr>
@@ -250,7 +250,7 @@ function shoppingCard(items) {
         <span class="badge ${items.length ? 'badge-warning' : 'badge-success'}">${items.length ? 'faltantes' : 'sin faltantes'}</span>
       </div>
       <table class="data-table">
-        <thead><tr><th>Producto</th><th>Faltante</th><th>Stock</th><th>Proveedor</th><th>Ultimo coste</th></tr></thead>
+        <thead><tr><th>Producto</th><th>Faltante</th><th>Disponible</th><th>Proveedor</th><th>Ultimo coste</th></tr></thead>
         <tbody>
           ${items.map((item) => `
             <tr>

@@ -4,6 +4,7 @@ import {
   formatPercent,
   formatWeight
 } from '../calculations.js';
+import { APP_STAGE } from '../constants.js';
 import { getDashboardAnalytics, formatReportQuantity } from '../reports.js';
 import { escapeHtml } from '../html.js';
 
@@ -16,7 +17,7 @@ export function renderDashboard({ data }) {
         <p class="eyebrow">Control operativo</p>
         <h2>Dashboard</h2>
       </div>
-      <span class="badge badge-info">Etapa 6</span>
+      <span class="badge badge-info">${escapeHtml(APP_STAGE)}</span>
     </section>
 
     <section class="metric-grid">
@@ -27,6 +28,8 @@ export function renderDashboard({ data }) {
       ${metricCard('Pedidos pendientes', analytics.pendingOrders, 'Pendiente/confirmado/listo')}
       ${metricCard('Pedidos entregados', analytics.deliveredOrders, 'Historico local')}
       ${metricCard('Pendiente cobro', formatCurrency(analytics.pendingCollection), 'Entregados no pagados')}
+      ${metricCard('Stock reservado', analytics.stockCommitments.metrics.reservedProducts, formatCurrency(analytics.stockCommitments.metrics.reservedValue))}
+      ${metricCard('Valor stock fisico', formatCurrency(analytics.stockCommitments.metrics.physicalValue), 'Inventario antes de reservas')}
       ${metricCard('Burritos posibles hoy', analytics.burritosPossibleToday, analytics.controlRecipe?.name ?? 'Sin receta control')}
       ${metricCard('Producto mas vendido', analytics.topSellingRecipe?.recipeName ?? 'Sin ventas', `${formatNumber(analytics.topSellingRecipe?.quantity ?? 0)} uds`)}
       ${metricCard('Mas rentable', analytics.mostProfitableRecipe?.recipeName ?? 'Sin ventas', formatCurrency(analytics.mostProfitableRecipe?.grossProfit ?? 0))}
@@ -43,6 +46,7 @@ export function renderDashboard({ data }) {
         <div class="alert-list">
           ${alert('warning', 'Ternera en standby', data.settings.beefStatusNote)}
           ${analytics.limitingIngredient ? alert('info', 'Ingrediente limitante general', `${analytics.limitingIngredient.productName}: permite ${analytics.limitingIngredient.possible} burritos de control.`) : alert('warning', 'Ingrediente limitante general', 'Sin receta de control.')}
+          ${analytics.stockCommitments.metrics.reservedProducts > 0 ? alert('info', 'Stock comprometido', `${analytics.stockCommitments.metrics.reservedProducts} productos tienen reservas activas por pedidos.`) : alert('success', 'Stock comprometido', 'No hay reservas activas.')}
           ${analytics.pendingCollection > 0 ? alert('warning', 'Pendiente de cobro', `${formatCurrency(analytics.pendingCollection)} en pedidos entregados no pagados.`) : alert('success', 'Pendiente de cobro', 'No hay entregados pendientes de pago.')}
           ${analytics.expiringLots.length ? alert('warning', 'Lotes por vencer', `${analytics.expiringLots.length} lotes requieren revision.`) : alert('success', 'Lotes por vencer', 'Sin lotes activos urgentes.')}
         </div>

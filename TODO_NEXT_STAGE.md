@@ -2,31 +2,46 @@
 
 ## Checkpoint Actual
 
-Etapa cerrada: **ETAPA 13 - Reservas de stock en pedidos**.
+Etapa cerrada: **ETAPA 14 - Stock fisico, reservado y disponible**.
 
-Fecha: 2026-06-08.
+Fecha: 2026-06-09.
 
 ## Completado
 
 - Se leyeron `README.md`, `CHANGELOG.md` y `TODO_NEXT_STAGE.md` antes de modificar.
-- Se agregaron tipos de movimiento:
-  - `reserva`,
-  - `liberacion_reserva`.
-- Confirmar pedido, pasarlo a `en_produccion` o `listo` reserva stock disponible.
-- Cancelar pedido o volverlo a `pendiente` / `borrador` libera la reserva activa.
-- Entregar pedido convierte la reserva en venta:
-  - crea `liberacion_reserva`,
-  - crea `venta`,
-  - mantiene trazabilidad por lote.
-- Si se entrega un pedido sin reserva previa, se reserva primero y luego se convierte en venta.
-- Se evita editar pedidos con stock reservado para no romper trazabilidad.
-- La planificacion/lista de compra no vuelve a contar necesidades de pedidos ya reservados.
-- La pantalla Pedidos muestra:
-  - metrica `Reservados`,
-  - badge `reservado`,
-  - regla de stock actualizada.
-- Se actualizo version visible a `0.13.0`, `APP_STAGE` a Etapa 13 y cache PWA a `0.13.0`.
-- Se ampliaron tests de pedidos para reserva, liberacion, entrega y reconfirmacion.
+- Se agregaron calculos explicitos para:
+  - stock fisico por producto y lote,
+  - stock reservado por producto y lote,
+  - stock disponible por producto y lote,
+  - resumen `calculateStockCommitments()`.
+- `calculateStockByProduct()` y `calculateStockByLot()` mantienen el significado operativo de stock disponible, para no romper pedidos, simulador ni produccion.
+- `calculateLotSummaries()` ahora expone:
+  - `physicalQuantity`,
+  - `reservedQuantity`,
+  - `availableQuantity`,
+  - `currentQuantity` como disponible.
+- Un lote totalmente reservado ya no se marca como agotado si sigue existiendo fisicamente.
+- Dashboard muestra:
+  - stock reservado,
+  - valor de stock fisico,
+  - alerta de stock comprometido.
+- Stock muestra columnas:
+  - fisico,
+  - reservado,
+  - disponible.
+- Lotes muestra fisico/reservado/disponible y oculta descarte cuando hay reserva activa.
+- El detalle de lote muestra stock fisico, reservado y disponible.
+- Reportes incluye:
+  - tarjeta de stock,
+  - tabla de stock comprometido,
+  - valor fisico, reservado y disponible.
+- CSV de stock exporta:
+  - `stock_fisico`,
+  - `stock_reservado`,
+  - `stock_disponible`.
+- El descarte de lote queda bloqueado si el lote tiene reserva activa.
+- Version actualizada a `0.14.0`, `APP_STAGE` a Etapa 14 y cache PWA a `0.14.0`.
+- Se ampliaron tests de calculos, reportes, CSV y bloqueo de descarte con reserva.
 
 ## Archivos Modificados
 
@@ -37,26 +52,29 @@ Fecha: 2026-06-08.
 - `service-worker.js`
 - `src/calculations.js`
 - `src/constants.js`
+- `src/exporters.js`
 - `src/main.js`
-- `src/models.js`
+- `src/reports.js`
 - `src/services/businessService.js`
+- `src/views/dashboardView.js`
+- `src/views/lotsView.js`
 - `src/views/ordersView.js`
+- `src/views/reportsView.js`
+- `src/views/stockView.js`
+- `tests/calculations.test.js`
 - `tests/orders.test.js`
 - `tests/pwa.test.js`
+- `tests/reports.test.js`
 - `docs/ARCHITECTURE.md`
-- `docs/BACKEND_PLAN.md`
+- `docs/BUSINESS_RULES.md`
 - `docs/INDEX.md`
 - `docs/QA_CHECKLIST.md`
 - `docs/ROADMAP.md`
 
 ## Verificacion
 
-- `npm.cmd test` pasa correctamente: 45/45.
+- `npm.cmd test` pasa correctamente: 48/48.
 - `node --check` paso para JS/MJS de `src/`, `server/` y `scripts/`.
-- Prueba HTTP basica del dev server en `http://127.0.0.1:5199/index.html`:
-  - status `200`,
-  - `#app` presente,
-  - `src/main.js` presente.
 
 ## Etapa Siguiente
 
@@ -64,12 +82,12 @@ No hay siguiente prompt obligatorio definido.
 
 Opciones razonables para una proxima etapa:
 
-- sincronizacion por coleccion en vez de reemplazo completo,
+- autenticacion backend real con usuarios y sesiones,
 - roles activos en UI/API,
-- autenticacion backend real,
-- resolver conflictos entre LocalStorage y SQLite,
-- adaptar `server/api.js` a Express si se acepta dependencia,
-- mejorar reportes especificos de reservas y compromisos de stock.
+- sincronizacion por coleccion en vez de reemplazo completo,
+- resolucion de conflictos entre LocalStorage y SQLite,
+- reportes avanzados de reservas por fecha de entrega,
+- adaptar `server/api.js` a Express si se acepta dependencia.
 
 ## Riesgos o Bugs Pendientes
 

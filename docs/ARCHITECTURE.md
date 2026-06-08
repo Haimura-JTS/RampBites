@@ -16,6 +16,7 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 - Backend SQLite local disponible como capa paralela al frontend local-first.
 - Sincronizacion manual LocalStorage/SQLite desde Configuracion y modo API espejo opcional.
 - Seguridad local opcional para operaciones sensibles.
+- Separacion explicita entre stock fisico, reservado y disponible.
 
 ## Capas Actuales
 
@@ -58,7 +59,7 @@ Responsabilidades:
 - costes,
 - rendimiento,
 - merma,
-- stock por producto/lote,
+- stock fisico, reservado y disponible por producto/lote,
 - coste receta,
 - burritos posibles,
 - ingrediente limitante,
@@ -211,11 +212,15 @@ Colecciones:
 
 ## Reglas Criticas
 
-- El stock disponible se calcula desde `stockMovements`.
+- El stock fisico, reservado y disponible se calcula desde `stockMovements`.
+- El stock fisico ignora `reserva` y `liberacion_reserva`.
+- El stock reservado es la reserva neta activa.
+- El stock disponible descuenta reservas y se usa para produccion, venta, simulacion y descarte.
 - Las compras crean lote, movimiento e historial de precio.
 - Las producciones consumen lote crudo y generan lote cocido.
 - La saborizacion transforma carne neutra en saborizada con movimientos.
 - Los pedidos reservan stock al confirmar, liberan al cancelar y convierten reserva en venta al entregar.
+- No se puede descartar un lote con reserva activa.
 - Los pedidos entregados no se editan; se corrigen con ajuste trazable.
 - Backups se crean antes de import, reset y restore.
 - El modo API espejo crea backup local antes de cargar datos del backend al iniciar.

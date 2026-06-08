@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSeedData } from '../src/seed.js';
 import { calculateOrderTotals, calculateShoppingList, calculateStockByProduct } from '../src/calculations.js';
-import { deliverOrder, markOrderPaid, saveOrder, savePurchase, setOrderStatus } from '../src/services/businessService.js';
+import { deliverOrder, markLotDiscarded, markOrderPaid, saveOrder, savePurchase, setOrderStatus } from '../src/services/businessService.js';
 
 test('guardar pedido calcula total, coste y ganancia desde receta', () => {
   const data = createSeedData();
@@ -113,6 +113,30 @@ test('confirmar pedido reserva stock y cancelar libera reserva', () => {
   const releasedStock = calculateStockByProduct(cancelled.data.stockMovements);
   assert.equal(releasedStock['prod-pork-cooked-neutral'], 800);
   assert.equal(releasedStock['prod-tortilla'], 10);
+});
+
+test('no permite descartar lote con reserva activa', () => {
+  const data = createSeedData();
+  addBurritoInputStock(data);
+  const saved = saveOrder(data, {
+    clientId: 'client-demo-001',
+    orderDate: '2026-06-05',
+    deliveryDate: '2026-06-05',
+    status: 'confirmado',
+    items: [{ recipeId: 'recipe-pork-standard', quantity: 1, unitPrice: 5 }]
+  });
+
+  assert.equal(saved.ok, true);
+  const reservedLotId = saved.data.stockMovements.find((movement) => (
+    movement.referenceId === saved.item.id
+    && movement.type === 'reserva'
+    && movement.productId === 'prod-pork-cooked-neutral'
+  ))?.fromLotId;
+  assert.ok(reservedLotId);
+
+  const discarded = markLotDiscarded(saved.data, reservedLotId, 'test');
+  assert.equal(discarded.ok, false);
+  assert.match(discarded.errors.join(' '), /stock reservado/);
 });
 
 test('reconfirmar despues de liberar no duplica reservas al entregar', () => {

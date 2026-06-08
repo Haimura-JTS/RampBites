@@ -5,7 +5,8 @@ import {
   getDashboardAnalytics,
   getPriceSupplierReport,
   getProductionReport,
-  getSalesReport
+  getSalesReport,
+  getStockCommitmentReport
 } from '../src/reports.js';
 import { createCsvExports, CSV_EXPORT_TYPES } from '../src/exporters.js';
 import { deliverOrder, markOrderPaid, saveOrder, savePurchase } from '../src/services/businessService.js';
@@ -47,8 +48,29 @@ test('exportadores CSV generan archivos esperados', () => {
 
   assert.equal(Object.keys(exports).length, 6);
   assert.match(exports[CSV_EXPORT_TYPES.PRODUCTS].filename, /productos/);
+  assert.match(exports[CSV_EXPORT_TYPES.STOCK].content, /stock_fisico,stock_reservado,stock_disponible/);
   assert.match(exports[CSV_EXPORT_TYPES.PRODUCTIONS].content, /coste_100g/);
   assert.match(exports[CSV_EXPORT_TYPES.COSTS].content, /Cerdo BBQ Base/);
+});
+
+test('reporte de stock comprometido muestra reservas activas', () => {
+  const data = createSeedData();
+  addBurritoInputStock(data);
+  const saved = saveOrder(data, {
+    clientId: 'client-demo-001',
+    orderDate: '2026-06-05',
+    deliveryDate: '2026-06-05',
+    status: 'confirmado',
+    items: [{ recipeId: 'recipe-pork-standard', quantity: 2, unitPrice: 5 }]
+  });
+  assert.equal(saved.ok, true);
+
+  const report = getStockCommitmentReport(saved.data);
+  const pork = report.rows.find((row) => row.productId === 'prod-pork-cooked-neutral');
+  assert.equal(report.metrics.reservedProducts > 0, true);
+  assert.equal(pork.physicalQuantity, 800);
+  assert.equal(pork.reservedQuantity, 200);
+  assert.equal(pork.availableQuantity, 600);
 });
 
 function createDeliveredOrder(data, { paid }) {

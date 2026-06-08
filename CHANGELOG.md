@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## [Unreleased - Etapa 14] - 2026-06-09
+
+### Added
+
+- Calculos explicitos de stock fisico, stock reservado y stock disponible por producto y lote.
+- Reporte `getStockCommitmentReport()` para stock comprometido por pedidos confirmados.
+- Metricas de stock reservado y valor fisico en Dashboard.
+- Columnas `Fisico`, `Reservado` y `Disponible` en Stock y Lotes.
+- Tabla de stock comprometido en Reportes.
+- Export CSV de stock con `stock_fisico`, `stock_reservado` y `stock_disponible`.
+- Detalle de lote con fisico, reservado y disponible.
+- Tests de calculo, reportes, CSV y bloqueo de descarte con reserva activa.
+
+### Changed
+
+- Version visible del proyecto actualizada a `0.14.0`.
+- `APP_STAGE` pasa a Etapa 14.
+- Cache PWA actualizado a `ramp-bites-control-panel-v0.14.0`.
+- El valor estimado de inventario se calcula sobre stock fisico, no sobre disponible.
+- Las alertas de stock bajo siguen usando stock disponible.
+
+### Fixed
+
+- Un lote completamente reservado ya no aparece como agotado mientras siga existiendo fisicamente.
+- No se permite descartar un lote con reserva activa.
+
 ## [Unreleased - Etapa 13] - 2026-06-08
 
 ### Added
@@ -459,4 +485,5 @@ Durante el desarrollo inicial se usara version `0.x`.
 - `0.11.0`: modo API espejo opcional con carga inicial y guardado automatico.
 - `0.12.0`: seguridad local con PIN admin para operaciones sensibles.
 - `0.13.0`: reservas de stock al confirmar pedidos.
+- `0.14.0`: stock fisico, reservado y disponible.
 - `1.0.0`: primera version interna usable con exportacion/importacion y reportes basicos.

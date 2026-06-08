@@ -466,13 +466,17 @@ function bindLotActions() {
   document.querySelectorAll('[data-action="view-lot"]').forEach((button) => {
     button.addEventListener('click', () => {
       const data = getData();
-      const lot = data.lots.find((item) => item.id === button.dataset.id);
+      const lot = calculateLotSummaries(data.lots, data.stockMovements, data.products)
+        .find((item) => item.id === button.dataset.id);
       const product = data.products.find((item) => item.id === lot?.productId);
       if (!lot) return;
       window.alert([
         lot.lotCode,
         `Producto: ${product?.name ?? lot.productId}`,
         `Cantidad inicial: ${lot.initialQuantity} ${lot.unit}`,
+        `Stock fisico: ${lot.physicalQuantity} ${lot.unit}`,
+        `Reservado: ${lot.reservedQuantity} ${lot.unit}`,
+        `Disponible: ${lot.currentQuantity} ${lot.unit}`,
         `Coste unitario: ${lot.unitCost}`,
         `Ubicacion: ${lot.location}`,
         `Coccion: ${lot.cookedAt || 'no aplica'}`,

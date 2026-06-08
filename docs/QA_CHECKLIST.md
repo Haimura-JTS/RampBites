@@ -33,6 +33,7 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Revisar historial de precios.
 - Registrar merma/consumo propio/regalo.
 - Intentar salida mayor que stock disponible y confirmar error.
+- Confirmar que Stock muestra fisico, reservado y disponible.
 
 ## Produccion
 
@@ -48,6 +49,8 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Revisar lotes activos.
 - Revisar vencidos/por vencer/sin fecha.
 - Descartar lote y confirmar movimiento trazable.
+- Confirmar que Lotes muestra fisico, reservado y disponible.
+- Intentar descartar un lote reservado y confirmar error claro.
 
 ## Recetas y Simulador
 
@@ -70,7 +73,9 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Agregar extras y quitar ingredientes.
 - Cambiar estados.
 - Confirmar pedido y comprobar movimiento `reserva`.
+- Confirmar que Stock disponible baja y Stock fisico se mantiene al reservar.
 - Cancelar pedido confirmado y comprobar movimiento `liberacion_reserva`.
+- Confirmar que la reserva desaparece al cancelar.
 - Marcar pagado.
 - Entregar pedido y confirmar conversion de reserva en `venta`.
 - Intentar entregar sin stock y confirmar error.

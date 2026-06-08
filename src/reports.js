@@ -10,9 +10,12 @@ import {
   calculatePossibleUnits,
   calculateRecipeFinancials,
   calculateStockByProduct,
+  calculateStockCommitments,
+  calculateStockValue,
   formatCurrency,
   formatPercent,
-  formatWeight
+  formatWeight,
+  getProductUnitCost
 } from './calculations.js';
 
 const ACTIVE_ORDER_STATUSES = [
@@ -23,7 +26,8 @@ const ACTIVE_ORDER_STATUSES = [
 ];
 
 export function getDashboardAnalytics(data, today = todayString()) {
-  const stock = calculateStockByProduct(data.stockMovements);
+  const stockCommitments = getStockCommitmentReport(data);
+  const stock = stockCommitments.availableByProduct;
   const salesReport = getSalesReport(data, { fromDate: null, toDate: today });
   const deliveredOrders = data.orders.filter((order) => order.status === ORDER_STATUS.DELIVERED);
   const dayOrders = deliveredOrders.filter((order) => orderDate(order) === today);
@@ -56,6 +60,7 @@ export function getDashboardAnalytics(data, today = todayString()) {
     mostProfitableRecipe: recipePerformance.mostProfitableRecipe,
     leastProfitableRecipe: recipePerformance.leastProfitableRecipe,
     criticalStock,
+    stockCommitments,
     expiringLots,
     controlRecipe,
     burritosPossibleToday: controlPossibleUnits,
@@ -63,6 +68,52 @@ export function getDashboardAnalytics(data, today = todayString()) {
     pendingCollection,
     planning,
     salesReport
+  };
+}
+
+export function getStockCommitmentReport(data, commitments = calculateStockCommitments(data.stockMovements)) {
+  const {
+    availableByProduct,
+    physicalByProduct,
+    reservedByProduct
+  } = commitments;
+  const rows = data.products.map((product) => {
+    const physicalQuantity = Number(physicalByProduct[product.id] ?? 0);
+    const reservedQuantity = Number(reservedByProduct[product.id] ?? 0);
+    const availableQuantity = Number(availableByProduct[product.id] ?? 0);
+    const unitCost = getProductUnitCost(product);
+    return {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      location: product.location,
+      unit: product.baseUnit,
+      stockMinimum: Number(product.stockMinimum) || 0,
+      physicalQuantity,
+      reservedQuantity,
+      availableQuantity,
+      unitCost,
+      physicalValue: Math.max(physicalQuantity, 0) * unitCost,
+      reservedValue: Math.max(reservedQuantity, 0) * unitCost,
+      availableValue: Math.max(availableQuantity, 0) * unitCost,
+      hasReservation: reservedQuantity > 0,
+      lowAvailable: product.active && Number(product.stockMinimum) > 0 && availableQuantity <= Number(product.stockMinimum)
+    };
+  });
+
+  return {
+    ...commitments,
+    rows,
+    reservedRows: rows.filter((row) => row.hasReservation),
+    lowAvailableRows: rows.filter((row) => row.lowAvailable),
+    metrics: {
+      physicalValue: calculateStockValue(data.products, physicalByProduct),
+      reservedValue: calculateStockValue(data.products, reservedByProduct),
+      availableValue: calculateStockValue(data.products, availableByProduct),
+      reservedProducts: rows.filter((row) => row.hasReservation).length,
+      lowAvailableProducts: rows.filter((row) => row.lowAvailable).length,
+      reservedUnits: rows.reduce((total, row) => total + row.reservedQuantity, 0)
+    }
   };
 }
 
@@ -334,7 +385,7 @@ function getCriticalStock(products, stock) {
 
 function getExpiringLotSummaries(lots) {
   return lots.filter((lot) => (
-    lot.currentQuantity > 0
+    (Number(lot.physicalQuantity ?? lot.currentQuantity) || 0) > 0
     && ['vencido', 'vence_hoy', 'vence_manana', 'por_vencer', 'sin_fecha'].includes(lot.computedStatus)
   ));
 }

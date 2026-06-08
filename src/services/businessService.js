@@ -18,6 +18,7 @@ import {
   calculateOrderIngredientNeeds,
   calculateOrderTotals,
   calculatePricePerKg,
+  calculateReservedStockByLot,
   calculateStockByProduct,
   calculateStockByLot,
   calculateUnitCost,
@@ -632,6 +633,11 @@ export function markLotDiscarded(data, lotId, notes = '') {
   if (!lot) return failure(['Lote no encontrado.']);
 
   const stockByLot = calculateStockByLot(data.stockMovements);
+  const reservedByLot = calculateReservedStockByLot(data.stockMovements);
+  if ((reservedByLot[lot.id] ?? 0) > 0) {
+    return failure(['No se puede descartar un lote con stock reservado. Cancela o entrega los pedidos asociados antes.']);
+  }
+
   const remaining = Math.max(stockByLot[lot.id] ?? 0, 0);
   const now = new Date().toISOString();
   if (remaining > 0) {

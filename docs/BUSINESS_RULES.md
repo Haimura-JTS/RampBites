@@ -16,6 +16,14 @@ La ternera no debe aparecer como producto base activo por defecto.
 
 El stock debe derivarse de movimientos trazables por lote.
 
+La app distingue:
+
+- `stock_fisico`: inventario real antes de reservas; ignora movimientos `reserva` y `liberacion_reserva`.
+- `stock_reservado`: reserva neta activa de pedidos confirmados, en produccion o listos.
+- `stock_disponible`: fisico menos reservado; se usa para simular, producir, vender, ajustar o descartar.
+
+Las alertas de stock bajo usan `stock_disponible`. El valor estimado de inventario usa `stock_fisico`.
+
 Tipos de stock:
 
 - `raw`: carne cruda.
@@ -36,6 +44,7 @@ Reglas:
 - Merma, descarte, consumo propio, regalo y prueba se registran como movimientos separados.
 - Los ajustes manuales deben requerir motivo.
 - No se debe borrar trazabilidad historica al corregir stock.
+- No se debe descartar un lote con reserva activa.
 
 ## Produccion
 

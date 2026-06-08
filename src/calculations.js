@@ -1,3 +1,5 @@
+import { MOVEMENT_TYPES } from './constants.js';
+
 export function calculateUnitCost(totalCost, quantity) {
   if (!isPositiveNumber(totalCost) || !isPositiveNumber(quantity)) return 0;
   return totalCost / quantity;
@@ -427,6 +429,37 @@ export function calculateStockByProduct(stockMovements = []) {
   }, {});
 }
 
+export function calculateAvailableStockByProduct(stockMovements = []) {
+  return calculateStockByProduct(stockMovements);
+}
+
+export function calculatePhysicalStockByProduct(stockMovements = []) {
+  return stockMovements.reduce((stock, movement) => {
+    if (isReservationMovement(movement)) return stock;
+    const productId = movement.productId;
+    if (!productId) return stock;
+
+    const direction = Number(movement.direction) || 1;
+    const quantity = Number(movement.quantity) || 0;
+    stock[productId] = (stock[productId] ?? 0) + direction * quantity;
+    return stock;
+  }, {});
+}
+
+export function calculateReservedStockByProduct(stockMovements = []) {
+  const reserved = stockMovements.reduce((stock, movement) => {
+    const productId = movement.productId;
+    if (!productId || !isReservationMovement(movement)) return stock;
+
+    const quantity = Number(movement.quantity) || 0;
+    const direction = movement.type === MOVEMENT_TYPES.RESERVATION ? 1 : -1;
+    stock[productId] = (stock[productId] ?? 0) + direction * quantity;
+    return stock;
+  }, {});
+
+  return clampPositiveMap(reserved);
+}
+
 export function calculateStockByLot(stockMovements = []) {
   return stockMovements.reduce((stock, movement) => {
     const direction = Number(movement.direction) || 1;
@@ -444,6 +477,56 @@ export function calculateStockByLot(stockMovements = []) {
   }, {});
 }
 
+export function calculateAvailableStockByLot(stockMovements = []) {
+  return calculateStockByLot(stockMovements);
+}
+
+export function calculatePhysicalStockByLot(stockMovements = []) {
+  return stockMovements.reduce((stock, movement) => {
+    if (isReservationMovement(movement)) return stock;
+    const direction = Number(movement.direction) || 1;
+    const quantity = Number(movement.quantity) || 0;
+
+    if (direction > 0) {
+      const lotId = movement.toLotId ?? movement.lotId;
+      if (lotId) stock[lotId] = (stock[lotId] ?? 0) + quantity;
+      return stock;
+    }
+
+    const lotId = movement.fromLotId ?? movement.lotId;
+    if (lotId) stock[lotId] = (stock[lotId] ?? 0) - quantity;
+    return stock;
+  }, {});
+}
+
+export function calculateReservedStockByLot(stockMovements = []) {
+  const reserved = stockMovements.reduce((stock, movement) => {
+    if (!isReservationMovement(movement)) return stock;
+    const quantity = Number(movement.quantity) || 0;
+    const isReservation = movement.type === MOVEMENT_TYPES.RESERVATION;
+    const lotId = isReservation
+      ? movement.fromLotId || movement.lotId || ''
+      : movement.toLotId || movement.lotId || '';
+    if (!lotId) return stock;
+
+    stock[lotId] = (stock[lotId] ?? 0) + (isReservation ? quantity : -quantity);
+    return stock;
+  }, {});
+
+  return clampPositiveMap(reserved);
+}
+
+export function calculateStockCommitments(stockMovements = []) {
+  return {
+    availableByProduct: calculateAvailableStockByProduct(stockMovements),
+    physicalByProduct: calculatePhysicalStockByProduct(stockMovements),
+    reservedByProduct: calculateReservedStockByProduct(stockMovements),
+    availableByLot: calculateAvailableStockByLot(stockMovements),
+    physicalByLot: calculatePhysicalStockByLot(stockMovements),
+    reservedByLot: calculateReservedStockByLot(stockMovements)
+  };
+}
+
 export function calculateStockValue(products = [], stock = {}) {
   const productIndex = toProductIndex(products);
 
@@ -454,18 +537,27 @@ export function calculateStockValue(products = [], stock = {}) {
 }
 
 export function calculateLotSummaries(lots = [], stockMovements = [], products = []) {
-  const stockByLot = calculateStockByLot(stockMovements);
+  const {
+    availableByLot,
+    physicalByLot,
+    reservedByLot
+  } = calculateStockCommitments(stockMovements);
   const productIndex = toProductIndex(products);
 
   return lots.map((lot) => {
-    const currentQuantity = stockByLot[lot.id] ?? 0;
+    const currentQuantity = availableByLot[lot.id] ?? 0;
+    const physicalQuantity = physicalByLot[lot.id] ?? currentQuantity;
+    const reservedQuantity = reservedByLot[lot.id] ?? 0;
     const product = productIndex[lot.productId];
     return {
       ...lot,
       product,
       currentQuantity,
-      stockValue: Math.max(currentQuantity, 0) * (Number(lot.unitCost) || 0),
-      computedStatus: getLotComputedStatus(lot, currentQuantity)
+      availableQuantity: currentQuantity,
+      physicalQuantity,
+      reservedQuantity,
+      stockValue: Math.max(physicalQuantity, 0) * (Number(lot.unitCost) || 0),
+      computedStatus: getLotComputedStatus(lot, physicalQuantity)
     };
   });
 }
@@ -606,6 +698,19 @@ function isPositiveNumber(value) {
 
 function isFiniteNumber(value) {
   return Number.isFinite(Number(value));
+}
+
+function isReservationMovement(movement) {
+  return movement?.type === MOVEMENT_TYPES.RESERVATION
+    || movement?.type === MOVEMENT_TYPES.RESERVATION_RELEASE;
+}
+
+function clampPositiveMap(values) {
+  return Object.fromEntries(
+    Object.entries(values)
+      .map(([key, value]) => [key, Math.max(Number(value) || 0, 0)])
+      .filter(([, value]) => value > 0.000001)
+  );
 }
 
 function roundMoney(value) {
