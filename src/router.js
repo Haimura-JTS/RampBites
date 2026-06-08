@@ -1,74 +1,99 @@
-/**
- * Router - Navegación entre vistas
- * 
- * Responsabilidades:
- * - Mantener vista actual
- * - Manejar cambios de vista
- * - Renderizar vistas
- * - Pasar parámetros entre vistas
- * 
- * ETAPA 0: Estructura definida
- * ETAPA 1: Será implementado (router simple, no SPA router complejo)
- */
+import { ROUTES } from './constants.js';
+import { renderClients } from './views/clientsView.js';
+import { renderDashboard } from './views/dashboardView.js';
+import { renderOrders } from './views/ordersView.js';
+import { renderPriceHistory } from './views/priceHistoryView.js';
+import { renderProducts } from './views/productsView.js';
+import { renderProduction } from './views/productionView.js';
+import { renderPurchases } from './views/purchasesView.js';
+import { renderRecipes } from './views/recipesView.js';
+import { renderReports } from './views/reportsView.js';
+import { renderPlaceholder } from './views/placeholderView.js';
+import { renderSettings } from './views/settingsView.js';
+import { renderSimulator } from './views/simulatorView.js';
+import { renderExpiry } from './views/expiryView.js';
+import { renderLots } from './views/lotsView.js';
+import { renderKitchen } from './views/kitchenView.js';
+import { renderStock } from './views/stockView.js';
+import { renderSuppliers } from './views/suppliersView.js';
 
-class Router {
+const routeRenderers = {
+  dashboard: renderDashboard,
+  products: renderProducts,
+  suppliers: renderSuppliers,
+  purchases: renderPurchases,
+  priceHistory: renderPriceHistory,
+  stock: renderStock,
+  production: renderProduction,
+  lots: renderLots,
+  expiry: renderExpiry,
+  recipes: renderRecipes,
+  simulator: renderSimulator,
+  kitchen: renderKitchen,
+  clients: renderClients,
+  orders: renderOrders,
+  reports: renderReports,
+  settings: renderSettings
+};
+
+export class Router {
   constructor() {
-    this.currentView = 'dashboard';
-    this.viewParams = {};
+    this.mainElement = null;
+    this.navElement = null;
+    this.context = {};
+    this.currentRoute = 'dashboard';
   }
 
-  navigate(viewName, params = {}) {
-    // TODO: Implementar en ETAPA 1
-    // - Guardar vista actual
-    // - Cambiar a nueva vista
-    // - Pasar parámetros
-    // - Llamar a render
-    this.currentView = viewName;
-    this.viewParams = params;
-    this.render();
+  init({ mainElement, navElement, context }) {
+    this.mainElement = mainElement;
+    this.navElement = navElement;
+    this.context = context;
+    this.renderNav();
+
+    window.addEventListener('hashchange', () => this.renderFromHash());
+    this.renderFromHash();
   }
 
-  render() {
-    // TODO: Implementar en ETAPA 1
-    // - Limpiar DOM principal
-    // - Cargar vista actual
-    // - Pasar parámetros
-    const appContainer = document.getElementById('app');
-    if (!appContainer) {
-      console.error('App container not found');
-      return;
+  navigate(routeName) {
+    window.location.hash = routeName;
+  }
+
+  renderFromHash() {
+    const hash = window.location.hash.replace('#', '') || 'dashboard';
+    const [routeName, queryString = ''] = hash.split('?');
+    const route = ROUTES.find((item) => item.name === routeName) ?? ROUTES[0];
+    this.currentRoute = route.name;
+    this.renderNav();
+    this.renderRoute({
+      ...route,
+      params: new URLSearchParams(queryString)
+    });
+  }
+
+  renderNav() {
+    if (!this.navElement) return;
+
+    this.navElement.innerHTML = ROUTES.map((route) => `
+      <a class="nav-link ${route.name === this.currentRoute ? 'is-active' : ''}" href="#${route.name}"${route.name === this.currentRoute ? ' aria-current="page"' : ''}>
+        ${route.label}
+      </a>
+    `).join('');
+  }
+
+  renderRoute(route) {
+    if (!this.mainElement) return;
+
+    const renderer = routeRenderers[route.name] ?? renderPlaceholder;
+    this.mainElement.innerHTML = renderer({
+      route,
+      data: this.context.getData(),
+      actions: this.context.actions
+    });
+
+    if (typeof this.context.afterRender === 'function') {
+      this.context.afterRender(route.name);
     }
-
-    // appContainer.innerHTML = '';
-    // const viewComponent = getViewComponent(this.currentView);
-    // viewComponent.render(appContainer, this.viewParams);
-  }
-
-  back() {
-    // TODO: Implementar historial en ETAPA 1
-    console.log('Back button pressed');
-  }
-
-  getRoutes() {
-    // TODO: Retornar todas las rutas disponibles
-    return [
-      { name: 'dashboard', label: '📊 Dashboard', icon: 'dashboard' },
-      { name: 'products', label: '📦 Productos', icon: 'box' },
-      { name: 'suppliers', label: '🏪 Proveedores', icon: 'store' },
-      { name: 'purchases', label: '💳 Compras', icon: 'cart' },
-      { name: 'stock', label: '📍 Stock', icon: 'layers' },
-      { name: 'production', label: '🍲 Producción', icon: 'fire' },
-      { name: 'lots', label: '📋 Lotes', icon: 'clipboard' },
-      { name: 'expiry', label: '⏰ Caducidad', icon: 'timer' },
-      { name: 'recipes', label: '👨‍🍳 Recetas', icon: 'utensils' },
-      { name: 'simulator', label: '🎯 Simulador', icon: 'target' },
-      { name: 'clients', label: '👥 Clientes', icon: 'users' },
-      { name: 'orders', label: '📝 Órdenes', icon: 'clipboard-list' },
-      { name: 'reports', label: '📈 Reportes', icon: 'chart-bar' },
-      { name: 'settings', label: '⚙️ Configuración', icon: 'cog' },
-      { name: 'backup', label: '💾 Backup', icon: 'save' }
-    ];
   }
 }
 
-export default new Router();
+export const router = new Router();

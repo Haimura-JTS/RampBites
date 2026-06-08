@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ramp Bites">
+  <rect width="512" height="512" rx="96" fill="#a63d2f"/>
+  <path d="M104 270c0-78 68-142 152-142s152 64 152 142v18H104v-18Z" fill="#f8d99b"/>
+  <path d="M141 284h230c-18 58-61 92-115 92s-97-34-115-92Z" fill="#f6f1e8"/>
+  <path d="M158 247c21-33 55-53 98-53s77 20 98 53H158Z" fill="#2f7d4f"/>
+  <path d="M190 236c18-16 39-24 66-24s48 8 66 24H190Z" fill="#74291f"/>
+  <path d="M156 286h200" stroke="#202124" stroke-width="18" stroke-linecap="round"/>
+  <path d="M184 320h144" stroke="#202124" stroke-width="18" stroke-linecap="round"/>
+</svg>

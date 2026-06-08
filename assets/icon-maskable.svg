@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ramp Bites">
+  <rect width="512" height="512" fill="#a63d2f"/>
+  <circle cx="256" cy="256" r="188" fill="#f6f1e8"/>
+  <path d="M112 274c0-72 65-132 144-132s144 60 144 132v18H112v-18Z" fill="#f8d99b"/>
+  <path d="M150 286h212c-18 52-58 82-106 82s-88-30-106-82Z" fill="#ffffff"/>
+  <path d="M161 250c21-29 54-47 95-47s74 18 95 47H161Z" fill="#2f7d4f"/>
+  <path d="M192 239c18-14 38-21 64-21s46 7 64 21H192Z" fill="#74291f"/>
+  <path d="M165 288h182" stroke="#202124" stroke-width="18" stroke-linecap="round"/>
+  <path d="M194 322h124" stroke="#202124" stroke-width="18" stroke-linecap="round"/>
+</svg>

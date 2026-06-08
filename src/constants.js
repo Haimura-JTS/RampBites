@@ -1,25 +1,42 @@
-/**
- * Constantes iniciales.
- *
- * Etapa 0: catalogo base alineado con docs.
- * Etapa 1: estas constantes se usaran en seed, vistas y validaciones.
- */
+export const APP_VERSION = '0.11.0';
+export const APP_STAGE = 'Etapa 11';
+export const STORAGE_KEY = 'ramp-bites-control-panel:v1';
+export const BACKUP_KEY = 'ramp-bites-control-panel:backup';
+export const SCHEMA_VERSION = 1;
+
+export const COLLECTIONS = [
+  'products',
+  'suppliers',
+  'purchases',
+  'priceHistory',
+  'stockMovements',
+  'productionBatches',
+  'lots',
+  'recipes',
+  'clients',
+  'orders',
+  'feedback'
+];
 
 export const PRODUCT_CATEGORIES = {
-  RAW_MEAT: 'raw_meat',
-  COOKED_MEAT: 'cooked_meat',
-  INGREDIENT: 'ingredient',
-  SAUCE: 'sauce',
-  SEASONING: 'seasoning',
-  BROTH: 'broth',
+  RAW_MEAT: 'carne_cruda',
+  COOKED_MEAT: 'carne_cocida',
+  CHICKEN: 'pollo',
+  RICE: 'arroz',
+  TORTILLA: 'tortilla',
+  SAUCE: 'salsa',
+  DAIRY: 'lacteo',
+  VEGETABLE: 'verdura',
+  SEASONING: 'condimento',
+  BROTH: 'caldo',
   PACKAGING: 'packaging',
-  FINISHED_PRODUCT: 'finished_product'
+  OTHER: 'otro'
 };
 
 export const UNITS = {
   GRAMS: 'g',
   MILLILITERS: 'ml',
-  UNITS: 'unit'
+  UNITS: 'ud'
 };
 
 export const STOCK_TYPES = {
@@ -32,58 +49,148 @@ export const STOCK_TYPES = {
   PACKAGING: 'packaging'
 };
 
-export const STORAGE_STATES = {
-  REFRIGERATED: 'refrigerated',
-  FROZEN: 'frozen',
-  DRY: 'dry',
-  AMBIENT: 'ambient'
+export const STORAGE_LOCATIONS = {
+  PANTRY: 'despensa',
+  FRIDGE: 'nevera',
+  FREEZER: 'congelador'
 };
 
-export const FLAVORS = {
-  NEUTRAL: 'neutral',
-  BBQ: 'bbq',
-  HONEY_MUSTARD: 'honey_mustard',
-  SPICY: 'spicy',
-  YOGURT_CREAMY: 'yogurt_creamy'
+export const PRODUCT_STATUS = {
+  ACTIVE: 'active',
+  STANDBY: 'standby',
+  PREMIUM: 'premium',
+  ARCHIVED: 'archived'
+};
+
+export const MOVEMENT_TYPES = {
+  PURCHASE: 'compra',
+  PRODUCTION_CONSUME: 'produccion_consumo',
+  PRODUCTION_OUTPUT: 'produccion_resultado',
+  FLAVORING: 'saborizacion',
+  SALE: 'venta',
+  ADJUSTMENT: 'ajuste',
+  WASTE: 'merma',
+  OWN_CONSUMPTION: 'consumo_propio',
+  GIFT: 'regalo',
+  EXPIRY: 'vencimiento',
+  RETURN: 'devolucion'
+};
+
+export const PRICE_UNITS = {
+  KG: 'kg',
+  LITER: 'litro',
+  UNIT: 'ud'
+};
+
+export const PRODUCTION_STATUS = {
+  PLANNED: 'planificada',
+  COOKING: 'cocinando',
+  FINISHED: 'finalizada',
+  STORED: 'almacenada',
+  PENDING: 'pendiente',
+  DISCARDED: 'descartada'
+};
+
+export const RECIPE_CATEGORIES = {
+  PORK: 'cerdo',
+  CHICKEN: 'pollo',
+  BEEF: 'ternera',
+  VEGETARIAN: 'vegetariano',
+  OTHER: 'otro'
+};
+
+export const RECIPE_STATUS = {
+  ACTIVE: 'activo',
+  TEST: 'prueba',
+  STANDBY: 'standby',
+  RETIRED: 'retirado'
+};
+
+export const RECIPE_INGREDIENT_GROUPS = {
+  MEAT: 'carne',
+  BASE: 'base',
+  SAUCE: 'salsa',
+  TOPPING: 'topping',
+  PACKAGING: 'packaging'
+};
+
+export const ORDER_STATUS = {
+  DRAFT: 'borrador',
+  PENDING: 'pendiente',
+  CONFIRMED: 'confirmado',
+  IN_PRODUCTION: 'en_produccion',
+  READY: 'listo',
+  DELIVERED: 'entregado',
+  CANCELLED: 'cancelado'
+};
+
+export const CLIENT_CHANNELS = {
+  WHATSAPP: 'whatsapp',
+  INSTAGRAM: 'instagram',
+  WORK: 'trabajo',
+  FRIEND: 'amigo',
+  OTHER: 'otro'
+};
+
+export const PAYMENT_METHODS = {
+  CASH: 'efectivo',
+  BIZUM: 'bizum',
+  TRANSFER: 'transferencia',
+  OTHER: 'otro'
 };
 
 export const ALLERGENS = {
   GLUTEN: 'gluten',
-  LACTOSE: 'lactose',
-  EGG: 'egg',
-  SOY: 'soy',
-  NUTS: 'nuts',
-  SESAME: 'sesame',
-  MUSTARD: 'mustard',
-  CELERY: 'celery',
-  SULFITES: 'sulfites'
+  LACTOSE: 'lactosa',
+  EGG: 'huevo',
+  SOY: 'soja',
+  NUTS: 'frutos_secos',
+  SESAME: 'sesamo',
+  MUSTARD: 'mostaza',
+  CELERY: 'apio',
+  SULFITES: 'sulfitos'
 };
 
-export const ORDER_STATES = {
-  DRAFT: 'draft',
-  CONFIRMED: 'confirmed',
-  IN_PRODUCTION: 'in_production',
-  READY: 'ready',
-  DELIVERED: 'delivered',
-  CANCELLED: 'cancelled'
+export const DEFAULT_SETTINGS = {
+  businessName: 'Ramp Bites',
+  currency: 'EUR',
+  locale: 'es-ES',
+  priceMultipliers: {
+    minimum: 2,
+    healthy: 2.5,
+    premium: 3
+  },
+  cookedFridgeMaxDays: 2,
+  cookedFrozenMaxDays: 30,
+  lowStockThreshold: 5,
+  defaultMeatPerBurritoG: 100,
+  targetBasePrice: 5,
+  demoMode: true,
+  beefStatusNote: 'Ternera en standby por coste alto',
+  backend: {
+    baseUrl: 'http://127.0.0.1:8787/api',
+    syncMode: 'manual',
+    lastStatus: '',
+    lastCheckedAt: '',
+    lastSyncAt: ''
+  }
 };
 
-export const MOVEMENT_TYPES = {
-  PURCHASE: 'purchase',
-  PRODUCTION_CONSUME: 'production_consume',
-  PRODUCTION_OUTPUT: 'production_output',
-  FLAVORING: 'flavoring',
-  SALE: 'sale',
-  WASTE: 'waste',
-  SHRINKAGE: 'shrinkage',
-  OWN_CONSUMPTION: 'own_consumption',
-  GIFT: 'gift',
-  TEST: 'test',
-  ADJUSTMENT: 'adjustment'
-};
-
-export const PRICE_MULTIPLIERS = {
-  MINIMUM: 2,
-  HEALTHY: 2.5,
-  PREMIUM: 3
-};
+export const ROUTES = [
+  { name: 'dashboard', label: 'Dashboard' },
+  { name: 'products', label: 'Productos' },
+  { name: 'suppliers', label: 'Proveedores' },
+  { name: 'purchases', label: 'Compras' },
+  { name: 'priceHistory', label: 'Historial precios' },
+  { name: 'stock', label: 'Stock' },
+  { name: 'production', label: 'Produccion' },
+  { name: 'lots', label: 'Lotes' },
+  { name: 'expiry', label: 'Caducidad' },
+  { name: 'recipes', label: 'Recetas' },
+  { name: 'simulator', label: 'Simulador' },
+  { name: 'kitchen', label: 'Cocina' },
+  { name: 'clients', label: 'Clientes' },
+  { name: 'orders', label: 'Pedidos' },
+  { name: 'reports', label: 'Reportes' },
+  { name: 'settings', label: 'Configuracion' }
+];

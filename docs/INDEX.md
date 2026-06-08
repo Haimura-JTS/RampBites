@@ -10,16 +10,19 @@ Indice de documentacion para Ramp Bites Control Panel.
 
 ## Documentos Tecnicos
 
-- `docs/ARCHITECTURE.md`: capas, persistencia y estrategia tecnica.
+- `docs/ARCHITECTURE.md`: capas actuales, persistencia y estrategia tecnica.
 - `docs/DATA_MODEL.md`: entidades y colecciones.
 - `docs/BUSINESS_RULES.md`: reglas internas de stock, coste, produccion y pedidos.
 - `docs/PRODUCTION_FLOW.md`: flujos operativos.
-- `docs/ROADMAP.md`: etapas de desarrollo.
-- `docs/BACKEND_PLAN.md`: ruta futura a IndexedDB, SQLite o backend Node.js.
-- `docs/ETAPA0_COMPLETED.md`: resumen de cierre de Etapa 0.
+- `docs/BACKEND_PLAN.md`: ruta futura a Node.js, Express y SQLite.
+- `docs/ROADMAP.md`: MVP local y crecimiento futuro.
+- `docs/QA_CHECKLIST.md`: checklist manual de QA.
+- `docs/ETAPA0_COMPLETED.md`: resumen historico de cierre de Etapa 0.
 
 ## Estado
 
-Etapa 0 esta cerrada. La siguiente etapa es **Etapa 1 - Infraestructura base**.
+Etapas 0 a 11 cerradas. El MVP local esta funcional, probado, instalable como PWA, con backend SQLite local, sincronizacion manual desde Configuracion y modo API espejo opcional.
 
-No avanzar a Etapa 1 hasta que se solicite explicitamente.
+No hay siguiente prompt obligatorio definido.
+
+No avanzar a nuevas mejoras salvo que se solicite explicitamente.

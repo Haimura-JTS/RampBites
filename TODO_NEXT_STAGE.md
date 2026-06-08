@@ -2,101 +2,73 @@
 
 ## Checkpoint Actual
 
-Etapa cerrada: **ETAPA 0 - Analisis, planificacion y diseno tecnico**.
+Etapa cerrada: **ETAPA 11 - Modo API espejo**.
 
-Fecha: 2026-06-04.
+Fecha: 2026-06-07.
 
 ## Completado
 
-- Se reviso el estado actual del proyecto.
-- Se leyeron `README.md` y `CHANGELOG.md`.
-- Se detecto que `TODO_NEXT_STAGE.md` no existia.
-- Se corrigio la documentacion base para evitar problemas de codificacion visibles.
-- Se identificaron entidades principales.
-- Se definio el modelo de datos inicial.
-- Se actualizo `docs/DATA_MODEL.md` para mantener un unico modelo coherente.
-- Se definieron reglas de stock y movimientos.
-- Se definieron reglas de coste obligatorias.
-- Se actualizo `docs/BUSINESS_RULES.md` con reglas internas consolidadas.
-- Se definio el flujo de produccion.
-- Se definio el flujo de pedido.
-- Se actualizo `docs/PRODUCTION_FLOW.md`.
-- Se actualizo `docs/ROADMAP.md`.
-- Se creo `docs/BACKEND_PLAN.md`.
-- Se normalizaron `docs/INDEX.md` y `docs/ETAPA0_COMPLETED.md`.
-- Se normalizo el skeleton conceptual existente en `src/`.
-- Se normalizo `index.html` como pantalla estatica de Etapa 0.
-- Se creo `src/styles/theme.css` para completar los estilos enlazados.
-- Se preparo una arquitectura modular para LocalStorage con migracion futura.
+- Se leyeron `README.md`, `CHANGELOG.md` y `TODO_NEXT_STAGE.md` antes de modificar.
+- Se mantuvo el comportamiento LocalStorage-first por defecto.
+- Se agrego modo backend `api_mirror`:
+  - carga inicial desde `GET /api/data` si el backend esta activo,
+  - backup local antes de reemplazar datos en el arranque API,
+  - envio automatico a `PUT /api/data` despues de `saveData()` local,
+  - fallback local si el backend no responde.
+- Se agrego selector `manual` / `api espejo` en Configuracion.
+- Se evito duplicar envios en acciones manuales `Enviar local` y `Traer backend`.
+- Se actualizo version visible a `0.11.0`, `APP_STAGE` a Etapa 11 y cache PWA a `0.11.0`.
+- Se agrego `tests/backendSync.test.js`.
+- Se actualizaron README, CHANGELOG, arquitectura, backend plan, roadmap, indice y este checkpoint.
 
 ## Archivos Modificados
 
 - `README.md`
 - `CHANGELOG.md`
 - `TODO_NEXT_STAGE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DATA_MODEL.md`
-- `docs/BUSINESS_RULES.md`
-- `docs/PRODUCTION_FLOW.md`
-- `docs/ROADMAP.md`
-- `docs/BACKEND_PLAN.md`
-- `docs/INDEX.md`
-- `docs/ETAPA0_COMPLETED.md`
-- `index.html`
+- `package.json`
+- `service-worker.js`
+- `src/constants.js`
 - `src/main.js`
 - `src/storage.js`
-- `src/constants.js`
-- `src/models.js`
-- `src/styles/theme.css`
+- `src/services/businessService.js`
+- `src/views/settingsView.js`
+- `tests/backendSync.test.js`
+- `tests/pwa.test.js`
+- `tests/settingsBackend.test.js`
+- `docs/ARCHITECTURE.md`
+- `docs/BACKEND_PLAN.md`
+- `docs/ROADMAP.md`
+- `docs/INDEX.md`
+
+## Verificacion
+
+- `npm.cmd test` pasa correctamente: 40/40.
+- `node --check` paso para JS/MJS de `src/`, `server/` y `scripts/`.
+- Prueba HTTP basica del dev server en `http://127.0.0.1:5199/index.html`:
+  - status `200`,
+  - `#app` presente,
+  - `src/main.js` presente.
 
 ## Etapa Siguiente
 
-**ETAPA 1 - Infraestructura base**
+No hay siguiente prompt obligatorio definido.
 
-Implementar solo:
+Opciones razonables para una proxima etapa:
 
-- `package.json` si se decide usar Vite.
-- Revisar y evolucionar `index.html`.
-- Estructura `/src`.
-- `src/main.js`.
-- `src/storage.js`.
-- `src/constants.js`.
-- `src/models.js`.
-- `src/seed.js`.
-- `src/router.js`.
-- Revisar y completar estilos base en `/src/styles`.
-- Layout responsive inicial tipo panel administrativo.
-- Navegacion entre modulos con vistas placeholder.
-- Inicializacion de datos seed editables en LocalStorage.
-- Utilidad de reset de datos local.
-- Primer dashboard basico con resumen de datos seed.
-
-## Criterios de Aceptacion de Etapa 1
-
-- La app abre localmente sin errores de consola.
-- La UI esta en espanol.
-- Hay navegacion visible entre modulos principales.
-- LocalStorage guarda un objeto versionado.
-- Los datos seed reales iniciales quedan cargados una sola vez.
-- Existe separacion entre almacenamiento, constantes, modelos, router y vistas.
-- No se implementa aun la logica completa de compras, produccion o pedidos.
-
-## Proximos Pasos Exactos
-
-1. Leer `README.md`, `CHANGELOG.md` y este archivo.
-2. Crear estructura de carpetas.
-3. Decidir si Etapa 1 usara Vite o HTML directo con modulos ES.
-4. Crear shell visual de la app.
-5. Crear adaptador de LocalStorage.
-6. Crear seed inicial con los datos reales catalogados.
-7. Renderizar dashboard y placeholders de modulos.
-8. Probar en navegador y revisar consola.
-9. Actualizar `README.md`, `CHANGELOG.md` y `TODO_NEXT_STAGE.md`.
+- autenticacion local,
+- roles activos en UI/API,
+- resolver conflictos entre LocalStorage y SQLite,
+- sincronizacion por coleccion en vez de reemplazo completo,
+- reservas de stock al confirmar pedido,
+- adaptar `server/api.js` a Express si se acepta dependencia.
 
 ## Riesgos o Bugs Pendientes
 
-- Hay que validar con cuidado fechas reales de coccion/caducidad cuando se implementen lotes.
-- Produccion real 2 esta incompleta; debe quedar como `pendiente` hasta que se cargue peso final.
-- El stock crudo teorico deja solo 14 g; cualquier redondeo debe conservar trazabilidad.
-- No conviene calcular stock desde campos editables; debe derivarse de movimientos.
-- Ternera debe existir como standby/premium, no como base activa.
+- El modo `api_mirror` reemplaza el dataset completo del backend en cada guardado local.
+- No hay control de concurrencia; no usar simultaneamente varios navegadores editando el mismo backend.
+- Express no esta instalado; la API usa `node:http` para seguir sin dependencias externas.
+- `node:sqlite` emite aviso experimental en Node 24.
+- No hay reservas de stock al confirmar pedido; se descuenta al entregar.
+- El modo offline cubre el app shell; los datos siguen dependiendo de LocalStorage del dispositivo.
+- No hay autenticacion real ni multiusuario activos.

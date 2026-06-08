@@ -1,105 +1,149 @@
-/**
- * Validadores
- * 
- * Funciones de validación para:
- * - Strings (longitud, formato)
- * - Numbers (rango, precision)
- * - Emails
- * - Fechas
- * - Estructuras de datos (Product, Purchase, etc.)
- * 
- * Devuelven: { valid: boolean, errors: string[] }
- * 
- * ETAPA 0: Estructura definida en BUSINESS_RULES.md (sección 10)
- * ETAPA 1: Será implementado aquí
- */
-
-export function validateRequired(value) {
-  // TODO: Implementar en ETAPA 1
-  return { valid: value !== null && value !== undefined && value !== '', errors: [] };
+export function validateRequired(value, label = 'Campo') {
+  const valid = value !== null && value !== undefined && String(value).trim() !== '';
+  return result(valid, valid ? [] : [`${label} es obligatorio.`]);
 }
 
-export function validateString(value, minLen = 1, maxLen = 1000) {
-  // TODO: Implementar en ETAPA 1
+export function validateString(value, label = 'Texto', minLength = 1, maxLength = 1000) {
   const errors = [];
-  if (!value || value.length < minLen) {
-    errors.push(`Mínimo ${minLen} caracteres`);
-  }
-  if (value && value.length > maxLen) {
-    errors.push(`Máximo ${maxLen} caracteres`);
-  }
-  return { valid: errors.length === 0, errors };
+  const text = String(value ?? '').trim();
+
+  if (text.length < minLength) errors.push(`${label} debe tener al menos ${minLength} caracteres.`);
+  if (text.length > maxLength) errors.push(`${label} no puede superar ${maxLength} caracteres.`);
+
+  return result(errors.length === 0, errors);
 }
 
-export function validateNumber(value, min = -Infinity, max = Infinity) {
-  // TODO: Implementar en ETAPA 1
+export function validateNumber(value, label = 'Numero', min = -Infinity, max = Infinity) {
   const errors = [];
-  if (isNaN(value)) {
-    errors.push('Debe ser un número');
-  }
-  if (value < min) {
-    errors.push(`Mínimo: ${min}`);
-  }
-  if (value > max) {
-    errors.push(`Máximo: ${max}`);
-  }
-  return { valid: errors.length === 0, errors };
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) errors.push(`${label} debe ser un numero.`);
+  if (number < min) errors.push(`${label} debe ser mayor o igual que ${min}.`);
+  if (number > max) errors.push(`${label} debe ser menor o igual que ${max}.`);
+
+  return result(errors.length === 0, errors);
 }
 
 export function validateEmail(email) {
-  // TODO: Implementar en ETAPA 1
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const valid = regex.test(email);
-  return { valid, errors: valid ? [] : ['Email inválido'] };
+  if (!email) return result(true, []);
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return result(valid, valid ? [] : ['Email invalido.']);
 }
 
-export function validateCurrency(value) {
-  // TODO: Implementar en ETAPA 1
-  // Debe ser número >= 0 con máx 2 decimales
-  const errors = [];
-  if (isNaN(value)) {
-    errors.push('Debe ser un número');
-  }
-  if (value < 0) {
-    errors.push('No puede ser negativo');
-  }
-  return { valid: errors.length === 0, errors };
+export function validateCurrency(value, label = 'Importe') {
+  const numberValidation = validateNumber(value, label, 0);
+  if (!numberValidation.valid) return numberValidation;
+
+  const decimals = String(value).split('.')[1]?.length ?? 0;
+  const errors = decimals > 2 ? [`${label} no puede tener mas de 2 decimales.`] : [];
+  return result(errors.length === 0, errors);
 }
 
 export function validateProduct(data) {
-  // TODO: Implementar en ETAPA 1
-  // Ver BUSINESS_RULES.md sección 10.1
-  const errors = [];
-  // Validar: name, category, unit, allergens
-  return { valid: errors.length === 0, errors };
+  return combine([
+    validateString(data?.name, 'Nombre de producto'),
+    validateRequired(data?.category, 'Categoria'),
+    validateRequired(data?.baseUnit, 'Unidad base'),
+    validateNumber(data?.stockMinimum ?? 0, 'Stock minimo', 0)
+  ]);
+}
+
+export function validateSupplier(data) {
+  return combine([
+    validateString(data?.name, 'Nombre de proveedor'),
+    validateRequired(data?.type, 'Tipo de proveedor')
+  ]);
 }
 
 export function validatePurchase(data) {
-  // TODO: Implementar en ETAPA 1
-  // Ver BUSINESS_RULES.md sección 10.2
-  const errors = [];
-  // Validar: productId, supplierId, quantity, priceTotal, date
-  return { valid: errors.length === 0, errors };
+  const validations = [
+    validateRequired(data?.supplierId, 'Proveedor'),
+    validateRequired(data?.date, 'Fecha')
+  ];
+
+  if (!Array.isArray(data?.items) || data.items.length === 0) {
+    validations.push(result(false, ['La compra debe tener al menos un item.']));
+  }
+
+  for (const item of data?.items ?? []) {
+    validations.push(validateRequired(item.productId, 'Producto'));
+    validations.push(validateNumber(item.quantity, 'Cantidad', 0.000001));
+    validations.push(validateCurrency(item.totalPrice, 'Precio total'));
+    validations.push(validateRequired(item.unit, 'Unidad'));
+  }
+
+  return combine(validations);
+}
+
+export function validateUnitCompatibility(item, product) {
+  if (!product) return result(false, ['Producto no encontrado.']);
+  if (!product.baseUnit) return result(false, [`${product.name} no tiene unidad base.`]);
+  if (item.unit !== product.baseUnit) {
+    return result(false, [`Unidad incompatible para ${product.name}: ${item.unit} vs ${product.baseUnit}.`]);
+  }
+
+  return result(true, []);
 }
 
 export function validateProduction(data) {
-  // TODO: Implementar en ETAPA 1
-  // Ver BUSINESS_RULES.md sección 10.3
-  const errors = [];
-  // Validar: inputMeat, outputMeat, yield, timestamps
-  return { valid: errors.length === 0, errors };
+  return combine([
+    validateRequired(data?.rawProductId, 'Carne cruda'),
+    validateNumber(data?.rawWeightUsed, 'Peso crudo usado', 0.000001)
+  ]);
 }
 
 export function validateRecipe(data) {
-  // TODO: Implementar en ETAPA 1
-  const errors = [];
-  // Validar: name, ingredients, allergens
-  return { valid: errors.length === 0, errors };
+  const validations = [
+    validateString(data?.name, 'Nombre de receta'),
+    validateRequired(data?.category, 'Categoria de receta'),
+    validateRequired(data?.status, 'Estado de receta')
+  ];
+  if (!Array.isArray(data?.ingredients) || data.ingredients.length === 0) {
+    validations.push(result(false, ['La receta debe tener ingredientes.']));
+  }
+
+  for (const item of data?.ingredients ?? []) {
+    validations.push(validateRequired(item.productId, 'Producto de ingrediente'));
+    validations.push(validateNumber(item.quantity, 'Cantidad de ingrediente', 0.000001));
+    validations.push(validateRequired(item.unit, 'Unidad de ingrediente'));
+  }
+
+  return combine(validations);
+}
+
+export function validateClient(data) {
+  const validations = [
+    validateString(data?.name, 'Nombre de cliente'),
+    validateRequired(data?.channel ?? 'otro', 'Canal')
+  ];
+  const emailValidation = validateEmail(data?.email);
+  validations.push(emailValidation);
+  return combine(validations);
 }
 
 export function validateOrder(data) {
-  // TODO: Implementar en ETAPA 1
-  const errors = [];
-  // Validar: clientId, items, total, deliveryDate
-  return { valid: errors.length === 0, errors };
+  const validations = [
+    validateRequired(data?.clientId, 'Cliente'),
+    validateRequired(data?.orderDate ?? data?.date, 'Fecha de pedido'),
+    validateRequired(data?.status, 'Estado de pedido'),
+    validateNumber(data?.discount ?? 0, 'Descuento', 0)
+  ];
+  if (!Array.isArray(data?.items) || data.items.length === 0) {
+    validations.push(result(false, ['El pedido debe tener al menos una linea.']));
+  }
+  for (const item of data?.items ?? []) {
+    validations.push(validateRequired(item.recipeId, 'Receta'));
+    validations.push(validateNumber(item.quantity, 'Cantidad de pedido', 0.000001));
+    validations.push(validateCurrency(item.unitPrice ?? 0, 'Precio unitario'));
+  }
+  return combine(validations);
+}
+
+function combine(validations) {
+  const errors = validations.flatMap((validation) => validation.errors);
+  return result(errors.length === 0, errors);
+}
+
+function result(valid, errors) {
+  return { valid, errors };
 }

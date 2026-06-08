@@ -1,162 +1,173 @@
 # Roadmap
 
-Plan por etapas para construir Ramp Bites Control Panel sin romper continuidad.
+Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 11 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual y modo API espejo opcional.
 
-## Etapa 0 - Analisis y Planificacion
+## MVP Local
 
-Estado: completada.
+Estado: completado en Etapas 0-11.
 
-Entregables:
+Incluye:
 
-- `README.md`
-- `CHANGELOG.md`
-- `TODO_NEXT_STAGE.md`
-- `docs/ARCHITECTURE.md`
-- `docs/DATA_MODEL.md`
-- `docs/BUSINESS_RULES.md`
-- `docs/PRODUCTION_FLOW.md`
-- `docs/ROADMAP.md`
-- `docs/BACKEND_PLAN.md`
+- app shell local-first,
+- LocalStorage versionado,
+- seed real editable,
+- productos,
+- proveedores,
+- compras,
+- historial de precios,
+- stock y movimientos,
+- produccion por tandas,
+- lotes,
+- caducidad/conservacion,
+- saborizacion,
+- recetas,
+- simulador,
+- clientes,
+- pedidos,
+- pagos,
+- feedback,
+- lista de compra automatica,
+- dashboard avanzado,
+- reportes,
+- backups,
+- exportacion/importacion JSON,
+- exportacion CSV,
+- tests y QA base,
+- PWA instalable,
+- modo cocina movil,
+- temporizador,
+- checklist de produccion,
+- backend SQLite local,
+- API REST,
+- backups de base de datos,
+- sincronizacion manual LocalStorage/SQLite,
+- modo API espejo con carga inicial desde backend y envio automatico de guardados.
 
-## Etapa 1 - Infraestructura Base
+## Backend
 
-Objetivo: crear una app local-first minima, navegable y sin logica compleja.
+Objetivo: pasar de LocalStorage a Node.js + SQLite y preparar Express.
 
-Alcance:
+Estado: base local completada en Etapa 9, sincronizacion manual en Etapa 10 y API espejo en Etapa 11.
 
-- `index.html`.
-- `package.json` si se usa Vite.
-- Estructura `/src`.
-- Router simple.
-- Storage adapter para LocalStorage.
-- Seed inicial versionado.
-- Layout administrativo responsive.
-- Vistas placeholder.
-- Dashboard basico con resumen seed.
+Incluye:
 
-No incluir todavia CRUD completo ni calculos avanzados.
+- API REST local.
+- Migracion desde JSON exportado.
+- SQLite con schema inicial.
+- Backups reales.
+- Reutilizar reglas de negocio actuales.
+- Cliente API en `src/apiClient.js`.
+- Modo `api_mirror` desde Configuracion.
 
-## Etapa 2 - Productos, Proveedores y Compras
+Pendiente:
 
-Objetivo: registrar catalogo inicial y compras.
+- sincronizacion por coleccion y resolucion de conflictos,
+- instalar/adaptar Express si se acepta dependencia externa,
+- autenticacion,
+- multiusuario.
 
-Alcance:
+## Login
 
-- CRUD de productos.
-- CRUD de proveedores.
-- Registro de compras.
-- Lineas de compra.
-- Calculo de precio unitario y precio/kg.
-- Creacion inicial de lotes y movimientos por compra.
+Objetivo: proteger operaciones sensibles.
 
-## Etapa 3 - Stock, Lotes y Movimientos
+Primer alcance:
 
-Objetivo: hacer visible la trazabilidad.
+- usuario admin local,
+- sesiones,
+- proteccion de import/reset/restore,
+- registro de auditoria basico.
 
-Alcance:
+## Multiusuario
 
-- Vista de lotes.
-- Vista de movimientos.
-- Stock disponible derivado.
-- Filtros por producto, tipo, estado y conservacion.
-- Registro de descarte, merma, consumo propio, regalo, prueba y ajuste.
+Objetivo: que varias personas puedan operar sin pisar datos.
 
-## Etapa 4 - Produccion por Tandas
+Primer alcance:
 
-Objetivo: registrar produccion real de carne.
+- roles,
+- bloqueo o transacciones para stock,
+- auditoria por usuario,
+- resolucion de conflictos en pedidos/stock.
 
-Alcance:
+## PWA
 
-- Crear y completar tandas.
-- Consumir stock crudo e insumos.
-- Registrar peso final.
-- Calcular rendimiento, merma, coste por gramo final y coste por 100 g.
-- Crear lotes cocidos neutros.
-- Mantener producciones pendientes sin stock vendible.
+Objetivo: modo cocina movil instalable.
 
-## Etapa 5 - Recetas y Costes
+Estado: completado en Etapa 8.
 
-Objetivo: calcular coste real por burrito.
+Incluye:
 
-Alcance:
+- `manifest.json`,
+- service worker,
+- offline,
+- botones grandes,
+- pantalla rapida de produccion,
+- pantalla rapida de pedidos,
+- checklist de coccion,
+- temporizador.
 
-- CRUD de recetas.
-- Ingredientes por gramos, ml y unidades.
-- Coste receta.
-- Precio recomendado configurable.
-- Evaluacion de viabilidad de venta a 5 EUR.
-- Alergenos por receta.
+## Escaneo Tickets
 
-## Etapa 6 - Simulador y Lista de Compra
+Objetivo: acelerar carga de compras.
 
-Objetivo: saber cuantos burritos se pueden producir.
+Ideas:
 
-Alcance:
+- OCR local o asistido,
+- captura de fecha/proveedor/importe,
+- lineas sugeridas editables,
+- validacion manual antes de guardar.
 
-- Burritos posibles por receta.
-- Ingrediente limitante.
-- Necesidades de compra.
-- Necesidades de produccion.
-- Alerta de sobreproduccion para mas de 2 dias.
+## Fotos Productos
 
-## Etapa 7 - Clientes y Pedidos
+Objetivo: reconocer productos/insumos y documentar lotes.
 
-Objetivo: gestionar pedidos reales.
+Ideas:
 
-Alcance:
+- foto de ticket,
+- foto de producto,
+- foto de lote cocido,
+- galeria por compra/lote.
 
-- CRUD de clientes.
-- Crear pedidos.
-- Lineas de pedido.
-- Estados de pedido.
-- Reserva de stock.
-- Salida de stock al entregar.
+## QR Pedidos
 
-## Etapa 8 - Caducidad, Conservacion y Alergenos
+Objetivo: facilitar entrega y trazabilidad.
 
-Objetivo: ordenar seguridad operativa interna.
+Ideas:
 
-Alcance:
+- QR por pedido,
+- vista rapida de pedido,
+- estado de pago,
+- feedback posterior.
 
-- Alertas de vencimiento.
-- Filtros por refrigerado, congelado, seco y packaging.
-- Alergenos en productos y recetas.
-- Avisos claros sin afirmar cumplimiento legal.
+## Integracion Google Sheets
 
-## Etapa 9 - Reportes y Feedback
+Objetivo: exportar/reportar sin duplicar carga manual.
+
+Ideas:
+
+- export periodico de ventas,
+- coste por receta,
+- stock critico,
+- compras por proveedor.
+
+## Reportes Financieros
 
 Objetivo: mejorar decisiones de negocio.
 
-Alcance:
+Ideas:
 
-- Margenes por receta.
-- Rendimiento por tanda.
-- Merma historica.
-- Compras por proveedor.
-- Precio historico.
-- Feedback de clientes.
+- margen por periodo,
+- margen por receta,
+- coste por proveedor,
+- tendencia de precios,
+- forecast de compra,
+- caja cobrada vs pendiente.
 
-## Etapa 10 - Exportacion, Importacion y Backups
+## Criterio Para Backend
 
-Objetivo: proteger datos locales.
+Migrar cuando se cumpla al menos uno:
 
-Alcance:
-
-- Exportar JSON.
-- Importar JSON validado.
-- Backup con metadata.
-- Reset controlado de datos.
-- Validacion de schema.
-
-## Etapa 11+ - Backend Futuro
-
-Objetivo: evolucionar a multiusuario o almacenamiento mas robusto.
-
-Opciones:
-
-- IndexedDB local.
-- SQLite local.
-- Backend Node.js.
-- Autenticacion.
-- API REST o RPC simple.
-- Sincronizacion y auditoria.
+- varios usuarios necesitan operar,
+- LocalStorage se queda corto,
+- se necesita historico mas robusto,
+- se requiere backup real automatico,
+- se empiezan a tomar decisiones financieras recurrentes con los reportes.

@@ -4,9 +4,9 @@ Herramienta interna local-first para gestionar la produccion artesanal de burrit
 
 ## Estado del Proyecto
 
-Etapa actual: **ETAPA 0 - Analisis, planificacion y diseno tecnico**.
+Etapa actual: **ETAPA 11 - Modo API espejo**.
 
-En esta etapa no se implementa la aplicacion completa. El objetivo es dejar claro que se va a construir, como se organizaran los datos y como se continuara en la Etapa 1.
+La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual y modo API espejo configurable.
 
 ## Objetivo del Producto
 
@@ -44,9 +44,14 @@ No se debe producir mas carne de la proyectada para 2 dias.
 - CSS3.
 - JavaScript moderno con modulos ES.
 - LocalStorage como persistencia inicial.
+- Node.js para servidor local, pruebas y backend API.
 - Arquitectura preparada para migrar a IndexedDB, SQLite o backend Node.js.
-- Vite opcional desde Etapa 1 si compensa por ergonomia.
+- Sin Vite por ahora; se usa un servidor estatico propio sin dependencias.
 - Sin frameworks pesados en la primera version.
+- PWA con `manifest.json` y service worker para shell offline.
+- Backend local con `node:http` y `node:sqlite` de Node 24.
+- API REST preparada para migrar a Express si se acepta esa dependencia.
+- Puente frontend/backend mediante `src/apiClient.js`, controles de sincronizacion manual y modo API espejo opcional.
 
 ## Idioma, Moneda y Unidades
 
@@ -61,17 +66,16 @@ No se debe producir mas carne de la proyectada para 2 dias.
 - **Product**: item comprable o producible.
 - **Supplier**: proveedor.
 - **Purchase**: compra registrada.
-- **PurchaseLine**: linea de compra con cantidad, unidad y precio.
-- **StockLot**: lote trazable de stock.
+- **PurchaseItem**: linea de compra con cantidad, unidad y precio.
+- **Lot**: lote trazable de stock.
 - **StockMovement**: movimiento de entrada, salida, transformacion, ajuste o descarte.
 - **ProductionBatch**: tanda de produccion.
 - **ProductionInput**: insumo usado en una tanda.
-- **ProductionOutput**: resultado de una tanda.
 - **Recipe**: receta de burrito o preparacion.
-- **RecipeIngredient**: ingrediente y cantidad requerida.
-- **Customer**: cliente.
+- **RecipeIngredient**: ingrediente, cantidad requerida, grupo, obligatoriedad y extra opcional.
+- **Client**: cliente.
 - **Order**: pedido.
-- **OrderLine**: linea de pedido.
+- **OrderItem**: linea de pedido.
 - **Allergen**: alergeno catalogado.
 - **Feedback**: valoraciones y notas de clientes.
 - **Settings**: configuracion editable, como multiplicadores de precio.
@@ -87,11 +91,12 @@ Los datos se guardaran como colecciones versionadas en LocalStorage:
   products: [],
   suppliers: [],
   purchases: [],
-  stockLots: [],
+  lots: [],
   stockMovements: [],
+  priceHistory: [],
   productionBatches: [],
   recipes: [],
-  customers: [],
+  clients: [],
   orders: [],
   allergens: [],
   feedback: [],
@@ -181,6 +186,8 @@ burritos_posibles = minimo de todos los posibles_por_ingrediente
 ingrediente_limitante = ingrediente con menor cantidad posible
 ```
 
+Los ingredientes opcionales o extras no limitan produccion base salvo que el usuario los seleccione en el simulador.
+
 Precio recomendado configurable:
 
 ```txt
@@ -196,6 +203,12 @@ Valores iniciales:
 - Premium: 3.
 
 La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
+
+Alertas de precio:
+
+- **No rentable**: precio actual por debajo del precio minimo.
+- **Margen ajustado**: precio actual entre minimo y sano.
+- **Margen saludable**: precio actual igual o superior al precio sano.
 
 ## Flujo de Produccion
 
@@ -215,13 +228,14 @@ La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
 ## Flujo de Pedido
 
 1. Registrar cliente.
-2. Crear pedido con fecha, estado y lineas.
-3. Seleccionar recetas y cantidades.
-4. Calcular coste real y precio recomendado.
-5. Comprobar stock disponible e ingrediente limitante.
-6. Reservar o descontar stock segun estado del pedido.
-7. Si falta stock, generar necesidades para lista de compra o produccion.
-8. Al completar pedido, registrar salidas de stock por lote.
+2. Crear pedido con fecha, entrega, estado, pago y lineas.
+3. Seleccionar recetas, cantidades, extras, ingredientes quitados y precio.
+4. Calcular subtotal, descuento, total, coste estimado, ganancia y margen.
+5. Comprobar stock disponible desde recetas.
+6. Mantener borrador, pendiente, confirmado, en produccion y listo sin descontar stock.
+7. Al marcar entregado, descontar stock definitivamente con movimientos tipo `venta`.
+8. Si falta stock, generar necesidades para lista de compra o produccion.
+9. Registrar feedback posterior a entrega.
 
 ## Datos Seed Reales Iniciales
 
@@ -281,10 +295,14 @@ La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
 
 ```txt
 /index.html
+/manifest.json
+/service-worker.js
 /package.json
 /README.md
 /CHANGELOG.md
 /TODO_NEXT_STAGE.md
+/assets/icon.svg
+/assets/icon-maskable.svg
 
 /src/main.js
 /src/storage.js
@@ -294,20 +312,33 @@ La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
 /src/validators.js
 /src/seed.js
 /src/router.js
+/src/html.js
+/src/services/businessService.js
+/src/apiClient.js
+
+/server/api.js
+/server/database.js
+/server/server.js
+/server/cli.js
+/server/paths.js
 
 /src/views/dashboardView.js
 /src/views/productsView.js
 /src/views/suppliersView.js
 /src/views/purchasesView.js
+/src/views/priceHistoryView.js
 /src/views/stockView.js
 /src/views/productionView.js
 /src/views/lotsView.js
+/src/views/expiryView.js
 /src/views/recipesView.js
 /src/views/simulatorView.js
+/src/views/kitchenView.js
 /src/views/clientsView.js
 /src/views/ordersView.js
 /src/views/reportsView.js
 /src/views/settingsView.js
+/src/views/placeholderView.js
 
 /src/components/table.js
 /src/components/form.js
@@ -322,6 +353,16 @@ La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
 /src/styles/theme.css
 
 /tests/calculations.test.js
+/tests/businessService.test.js
+/tests/productionService.test.js
+/tests/recipeService.test.js
+/tests/orders.test.js
+/tests/reports.test.js
+/tests/storage.test.js
+/tests/functionalSmoke.test.js
+/tests/pwa.test.js
+/tests/backend.test.js
+/scripts/dev-server.mjs
 
 /docs/ARCHITECTURE.md
 /docs/BACKEND_PLAN.md
@@ -330,17 +371,18 @@ La app debe indicar si vender a 5 EUR es viable para cada receta, no asumirlo.
 
 ## Etapas Planeadas
 
-- **Etapa 1**: skeleton funcional local-first, layout, router, storage, seed y dashboard basico.
-- **Etapa 2**: productos, proveedores y compras.
-- **Etapa 3**: stock, lotes y movimientos trazables.
-- **Etapa 4**: produccion por tandas, rendimiento, merma y costes.
-- **Etapa 5**: recetas, costes por burrito y viabilidad de precio.
-- **Etapa 6**: simulador de burritos posibles y lista de compra.
-- **Etapa 7**: clientes, pedidos y reservas/salidas de stock.
-- **Etapa 8**: alergenos, caducidad, conservacion y alertas.
-- **Etapa 9**: reportes, margenes, feedback y analisis.
-- **Etapa 10**: exportar/importar datos y backups.
-- **Etapa 11+**: preparacion de backend, IndexedDB/SQLite y pruebas ampliadas.
+- **Etapa 1**: skeleton funcional local-first, layout, router, storage, seed y dashboard basico. **Completada**.
+- **Etapa 2**: productos, proveedores, compras, stock e historial de precios. **Completada**.
+- **Etapa 3**: produccion por tandas, lotes, rendimiento, conservacion y caducidad. **Completada**.
+- **Etapa 4**: recetas, menu, costes por burrito, simulador y precios. **Completada**.
+- **Etapa 5**: clientes, pedidos, estados, pagos, planificacion y lista de compra. **Completada**.
+- **Etapa 6**: dashboard avanzado, reportes, analitica, exportacion e importacion. **Completada**.
+- **Etapa 7**: QA, hardening, refactor y preparacion backend. **Completada**.
+- **Etapa 8**: PWA opcional y modo cocina movil. **Completada**.
+- **Etapa 9**: backend Node.js/SQLite, API REST, migracion JSON y backups DB. **Completada**.
+- **Etapa 10**: sincronizacion frontend/backend desde Configuracion. **Completada**.
+- **Etapa 11**: modo API espejo opcional con carga inicial desde SQLite y envio automatico de guardados. **Completada**.
+- **Etapa 12+**: autenticacion, multiusuario, roles activos y mejoras avanzadas.
 
 ## Continuidad
 
@@ -352,4 +394,159 @@ Antes de cada etapa se deben leer:
 
 No avanzar a una etapa nueva sin peticion explicita.
 
-Ultima actualizacion: 2026-06-04.
+## Como Ejecutar
+
+```bash
+npm.cmd run dev
+```
+
+Abrir:
+
+```txt
+http://localhost:5173
+```
+
+Pruebas:
+
+```bash
+npm.cmd test
+```
+
+Nota Windows: `npm test` puede quedar bloqueado por la politica de ejecucion de PowerShell; `npm.cmd test` evita ese problema.
+
+## Backend SQLite
+
+Requisito: Node.js 24 o superior por uso de `node:sqlite`.
+
+Inicializar base vacia:
+
+```bash
+npm.cmd run backend:init
+```
+
+Cargar seed en SQLite:
+
+```bash
+npm.cmd run backend:seed
+```
+
+Arrancar API:
+
+```bash
+npm.cmd run backend
+```
+
+Abrir:
+
+```txt
+http://127.0.0.1:8787/api/health
+```
+
+Importar JSON exportado desde la UI:
+
+```bash
+npm.cmd run backend:import -- ruta\backup-ramp-bites.json
+```
+
+Exportar JSON desde SQLite:
+
+```bash
+npm.cmd run backend:export -- ramp-bites-sqlite-export.json
+```
+
+Crear backup de la base:
+
+```bash
+npm.cmd run backend:backup
+```
+
+La base local vive en `data/ramp-bites.sqlite` y los backups en `backups/`. Ambas carpetas estan ignoradas por Git.
+
+Endpoints principales:
+
+- `GET /api/health`
+- `GET /api/data`
+- `PUT /api/data`
+- `POST /api/import/json`
+- `GET /api/products`, `POST /api/products`, `PATCH /api/products/:id`
+- `GET /api/suppliers`, `POST /api/suppliers`
+- `GET /api/purchases`, `POST /api/purchases`
+- `GET /api/stock-movements`, `POST /api/stock-movements`
+- `GET /api/production-batches`, `POST /api/production-batches`
+- `POST /api/production-batches/:id/complete`
+- `GET /api/lots`, `POST /api/lots/:id/discard`
+- `GET /api/recipes`, `POST /api/recipes`
+- `GET /api/clients`, `POST /api/clients`
+- `GET /api/orders`, `POST /api/orders`
+- `POST /api/orders/:id/deliver`
+- `GET /api/reports/dashboard`
+- `GET /api/reports/production`
+- `GET /api/reports/sales`
+- `GET /api/reports/prices`
+- `GET /api/reports/costs`
+- `GET /api/backups`, `POST /api/backups`
+
+## Sincronizacion Frontend/Backend
+
+La UI sigue operando sobre LocalStorage por defecto. En `Configuracion > Backend SQLite` hay dos modos:
+
+- `manual`: la app guarda solo en LocalStorage y usa botones explicitos para enviar/traer datos.
+- `api_mirror`: al iniciar trae datos desde `GET /api/data` y cada `saveData()` local envia un `PUT /api/data` en segundo plano.
+
+Controles disponibles:
+
+- comprobar `GET /api/health`,
+- enviar datos locales al backend con backup SQLite previo,
+- traer datos del backend creando backup local antes,
+- crear backup backend,
+- cargar seed backend.
+
+Si el backend no esta disponible, la app no bloquea el uso local; queda LocalStorage como base de trabajo.
+
+La URL por defecto es:
+
+```txt
+http://127.0.0.1:8787/api
+```
+
+## Uso Actual
+
+- `Clientes`: crear, editar, desactivar, buscar y ver historial resumido.
+- `Pedidos`: crear pedido completo con recetas, extras, ingredientes quitados, descuento, pago y estado.
+- `Pedido rapido`: crear una linea simple de cliente + receta + cantidad.
+- `Entregar`: descuenta stock definitivamente y crea movimientos `venta` con referencia al pedido.
+- `Pedidos proximos`: resume necesidades de hoy y manana.
+- `Lista de compra automatica`: muestra faltantes segun pedidos proximos, stock y proveedor recomendado.
+- `Feedback`: registrar valoracion despues de entregar.
+- `Reportes`: revisar produccion, ventas, proveedores/precios y costes por receta.
+- `Configuracion`: ajustar multiplicadores, conservacion, modo demo, JSON, backups y CSV.
+- `Configuracion > Backend SQLite`: comprobar API, enviar local, traer backend, crear backup backend, cargar seed backend y activar `api_mirror`.
+- `Cocina`: pantalla movil con produccion rapida, pedido rapido, temporizador, checklist y accesos grandes.
+- PWA: instalable cuando el navegador lo permite; el shell principal queda cacheado para offline.
+- `Backend`: API local SQLite para migrar datos, consultar colecciones, generar reportes y crear backups de base.
+
+## Flujo Rapido de Uso
+
+1. Ejecutar `npm.cmd run dev`.
+2. Abrir `http://localhost:5173`.
+3. En `Productos`, revisar o crear insumos.
+4. En `Proveedores`, registrar proveedor si falta.
+5. En `Compras`, cargar tickets con varios items; esto actualiza stock, lotes e historial de precios.
+6. En `Produccion`, registrar tanda, consumir carne cruda/insumos y crear lote cocido.
+7. En `Recetas`, crear o editar burritos y revisar coste real.
+8. En `Simulador`, calcular burritos posibles, faltantes e ingrediente limitante.
+9. En `Cocina`, usar produccion rapida, pedido rapido, checklist y temporizador desde movil.
+10. En `Clientes` y `Pedidos`, crear pedidos, marcarlos pagados y entregarlos.
+11. En `Reportes`, revisar ventas, produccion, proveedores y costes.
+12. En `Configuracion`, exportar JSON, crear backup, restaurar backup o exportar CSV.
+13. Para backend, importar ese JSON con `npm.cmd run backend:import -- archivo.json` o cargar demo con `npm.cmd run backend:seed`.
+14. Si se quiere trabajar contra SQLite en espejo, arrancar `npm.cmd run backend` y activar `api_mirror` en Configuracion.
+
+## QA
+
+- Tests automaticos: `npm.cmd test` (40 tests).
+- Checklist manual: `docs/QA_CHECKLIST.md`.
+- Backend futuro: `docs/BACKEND_PLAN.md`.
+- Roadmap: `docs/ROADMAP.md`.
+
+Ultima actualizacion: 2026-06-07.
