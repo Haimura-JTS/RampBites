@@ -1,5 +1,6 @@
 import { APP_VERSION } from '../constants.js';
 import { DEFAULT_API_BASE_URL } from '../apiClient.js';
+import { describeSecurityStatus, getSecuritySettings, hasAdminPin } from '../auth.js';
 import { CSV_EXPORT_TYPES } from '../exporters.js';
 import { formatCurrency } from '../calculations.js';
 import { escapeAttribute, escapeHtml, option } from '../html.js';
@@ -7,6 +8,7 @@ import { escapeAttribute, escapeHtml, option } from '../html.js';
 export function renderSettings({ data, actions }) {
   const { settings } = data;
   const backend = settings.backend ?? {};
+  const security = getSecuritySettings(data);
   const backups = typeof actions?.listBackups === 'function' ? actions.listBackups() : [];
 
   return `
@@ -46,6 +48,10 @@ export function renderSettings({ data, actions }) {
             <label>Carne por burrito<input name="defaultMeatPerBurritoG" type="number" min="0" step="1" value="${escapeAttribute(settings.defaultMeatPerBurritoG)}"></label>
             <label class="checkbox-line"><input name="demoMode" type="checkbox"${settings.demoMode ? ' checked' : ''}> Modo demo</label>
           </div>
+          <div class="form-row">
+            <label class="checkbox-line"><input name="localAuthEnabled" type="checkbox"${security.localAuthEnabled ? ' checked' : ''}> Proteger operaciones sensibles</label>
+            <label>Minutos sesion admin<input name="adminSessionMinutes" type="number" min="1" step="1" value="${escapeAttribute(security.adminSessionMinutes)}"></label>
+          </div>
           <label>Nota ternera standby<input name="beefStatusNote" value="${escapeAttribute(settings.beefStatusNote)}"></label>
           <div class="form-row">
             <label>URL API backend<input name="backendBaseUrl" value="${escapeAttribute(backend.baseUrl || DEFAULT_API_BASE_URL)}"></label>
@@ -68,6 +74,7 @@ export function renderSettings({ data, actions }) {
           <div><dt>Modo demo</dt><dd>${settings.demoMode ? 'activo' : 'inactivo'}</dd></div>
           <div><dt>Modo backend</dt><dd>${escapeHtml(backend.syncMode || 'manual')}</dd></div>
           <div><dt>Backend</dt><dd>${escapeHtml(backend.lastStatus || 'sin comprobar')}</dd></div>
+          <div><dt>Seguridad</dt><dd>${escapeHtml(describeSecurityStatus(data))}</dd></div>
         </dl>
       </article>
     </section>
@@ -121,6 +128,27 @@ export function renderSettings({ data, actions }) {
           ${Object.values(CSV_EXPORT_TYPES).map((type) => `<button class="btn btn-secondary" data-action="export-csv" data-type="${escapeAttribute(type)}">${escapeHtml(type)}</button>`).join('')}
         </div>
         <p class="muted">CSV disponible para productos, stock, compras, producciones, pedidos y reporte de costes.</p>
+      </article>
+
+      <article class="panel">
+        <h3>Seguridad local</h3>
+        <dl class="summary-list">
+          <div><dt>Estado</dt><dd>${escapeHtml(describeSecurityStatus(data))}</dd></div>
+          <div><dt>PIN admin</dt><dd>${hasAdminPin(data) ? 'configurado' : 'sin configurar'}</dd></div>
+          <div><dt>Sesion</dt><dd>${escapeHtml(`${security.adminSessionMinutes} min`)}</dd></div>
+        </dl>
+        <form class="stack-form compact-form" data-form="security-pin">
+          <div class="form-row">
+            <label>Nuevo PIN admin<input name="adminPin" type="password" autocomplete="new-password" minlength="4"></label>
+            <label>Repetir PIN<input name="adminPinConfirm" type="password" autocomplete="new-password" minlength="4"></label>
+          </div>
+          <div class="button-row">
+            <button class="btn btn-secondary" type="submit">Guardar PIN</button>
+            <button class="btn btn-secondary" type="button" data-action="unlock-admin">Desbloquear admin</button>
+            <button class="btn btn-secondary" type="button" data-action="lock-admin">Bloquear admin</button>
+          </div>
+        </form>
+        <p class="muted">Protege importacion, reset, restauracion y sincronizaciones destructivas. No sustituye autenticacion multiusuario real.</p>
       </article>
 
       <article class="panel">

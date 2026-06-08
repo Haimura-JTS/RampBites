@@ -281,6 +281,10 @@ export function createEmptyDatabase(overrides = {}) {
         ...database.settings.backend,
         ...(isPlainObject(safeOverrides.settings?.backend) ? safeOverrides.settings.backend : {})
       },
+      security: {
+        ...database.settings.security,
+        ...(isPlainObject(safeOverrides.settings?.security) ? safeOverrides.settings.security : {})
+      },
       priceMultipliers: {
         ...database.settings.priceMultipliers,
         ...(isPlainObject(safeOverrides.settings?.priceMultipliers) ? safeOverrides.settings.priceMultipliers : {})

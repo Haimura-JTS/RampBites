@@ -21,7 +21,7 @@ Indice de documentacion para Ramp Bites Control Panel.
 
 ## Estado
 
-Etapas 0 a 11 cerradas. El MVP local esta funcional, probado, instalable como PWA, con backend SQLite local, sincronizacion manual desde Configuracion y modo API espejo opcional.
+Etapas 0 a 12 cerradas. El MVP local esta funcional, probado, instalable como PWA, con backend SQLite local, sincronizacion manual desde Configuracion, modo API espejo opcional y seguridad local para operaciones sensibles.
 
 No hay siguiente prompt obligatorio definido.
 

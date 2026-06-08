@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ramp-bites-control-panel-v0.11.0';
+const CACHE_NAME = 'ramp-bites-control-panel-v0.12.0';
 
 const APP_SHELL = [
   './',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './assets/icon.svg',
   './assets/icon-maskable.svg',
   './src/main.js',
+  './src/auth.js',
   './src/constants.js',
   './src/calculations.js',
   './src/exporters.js',

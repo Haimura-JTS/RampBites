@@ -15,6 +15,7 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 - PWA instalable con app shell cacheada para uso offline del panel.
 - Backend SQLite local disponible como capa paralela al frontend local-first.
 - Sincronizacion manual LocalStorage/SQLite desde Configuracion y modo API espejo opcional.
+- Seguridad local opcional para operaciones sensibles.
 
 ## Capas Actuales
 
@@ -50,6 +51,7 @@ Archivos:
 - `src/calculations.js`
 - `src/reports.js`
 - `src/exporters.js`
+- `src/auth.js`
 
 Responsabilidades:
 
@@ -64,6 +66,8 @@ Responsabilidades:
 - coste pedido,
 - reportes,
 - CSV.
+- PIN admin local,
+- sesion admin local.
 
 ### Servicios de Aplicacion
 
@@ -215,6 +219,7 @@ Colecciones:
 - Los pedidos entregados no se editan; se corrigen con ajuste trazable.
 - Backups se crean antes de import, reset y restore.
 - El modo API espejo crea backup local antes de cargar datos del backend al iniciar.
+- La seguridad local puede pedir PIN admin antes de operaciones destructivas.
 - Imports legacy sin `schemaVersion` migran a schema actual.
 - Imports con schema futuro se rechazan.
 - El backend usa las mismas reglas de negocio para compras, producciones, recetas, clientes y pedidos.
@@ -234,6 +239,7 @@ Estado actual:
 - SQLite local implementado con `node:sqlite`.
 - API REST implementada con `node:http`.
 - UI conectada al backend mediante acciones manuales y modo API espejo opcional.
+- Seguridad local implementada en frontend con PIN admin hasheado; autenticacion backend real queda pendiente.
 - Express queda como adaptacion futura para mantener el proyecto sin dependencias externas por ahora.
 
 Ver `docs/BACKEND_PLAN.md`.

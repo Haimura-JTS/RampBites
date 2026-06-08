@@ -4,9 +4,9 @@ Herramienta interna local-first para gestionar la produccion artesanal de burrit
 
 ## Estado del Proyecto
 
-Etapa actual: **ETAPA 11 - Modo API espejo**.
+Etapa actual: **ETAPA 12 - Seguridad local**.
 
-La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual y modo API espejo configurable.
+La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable y proteccion local de operaciones sensibles.
 
 ## Objetivo del Producto
 
@@ -52,6 +52,7 @@ No se debe producir mas carne de la proyectada para 2 dias.
 - Backend local con `node:http` y `node:sqlite` de Node 24.
 - API REST preparada para migrar a Express si se acepta esa dependencia.
 - Puente frontend/backend mediante `src/apiClient.js`, controles de sincronizacion manual y modo API espejo opcional.
+- Seguridad local opcional mediante PIN admin hasheado y sesion en `sessionStorage`.
 
 ## Idioma, Moneda y Unidades
 
@@ -382,7 +383,8 @@ Alertas de precio:
 - **Etapa 9**: backend Node.js/SQLite, API REST, migracion JSON y backups DB. **Completada**.
 - **Etapa 10**: sincronizacion frontend/backend desde Configuracion. **Completada**.
 - **Etapa 11**: modo API espejo opcional con carga inicial desde SQLite y envio automatico de guardados. **Completada**.
-- **Etapa 12+**: autenticacion, multiusuario, roles activos y mejoras avanzadas.
+- **Etapa 12**: seguridad local opcional con PIN admin para operaciones sensibles. **Completada**.
+- **Etapa 13+**: autenticacion backend, multiusuario, roles activos y mejoras avanzadas.
 
 ## Continuidad
 
@@ -509,6 +511,21 @@ La URL por defecto es:
 http://127.0.0.1:8787/api
 ```
 
+## Seguridad Local
+
+En `Configuracion > Seguridad local` se puede activar proteccion de operaciones sensibles con un PIN admin.
+
+Operaciones protegidas cuando la seguridad esta activa:
+
+- importar JSON,
+- reset demo,
+- restaurar backups,
+- enviar datos locales al backend,
+- traer datos del backend,
+- cargar seed backend.
+
+El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vive en `sessionStorage` y caduca segun los minutos configurados. Esta proteccion ayuda a evitar acciones accidentales en uso local, pero no sustituye autenticacion backend ni multiusuario real.
+
 ## Uso Actual
 
 - `Clientes`: crear, editar, desactivar, buscar y ver historial resumido.
@@ -520,6 +537,7 @@ http://127.0.0.1:8787/api
 - `Feedback`: registrar valoracion despues de entregar.
 - `Reportes`: revisar produccion, ventas, proveedores/precios y costes por receta.
 - `Configuracion`: ajustar multiplicadores, conservacion, modo demo, JSON, backups y CSV.
+- `Configuracion > Seguridad local`: activar PIN admin, desbloquear/bloquear sesion y definir minutos de sesion.
 - `Configuracion > Backend SQLite`: comprobar API, enviar local, traer backend, crear backup backend, cargar seed backend y activar `api_mirror`.
 - `Cocina`: pantalla movil con produccion rapida, pedido rapido, temporizador, checklist y accesos grandes.
 - PWA: instalable cuando el navegador lo permite; el shell principal queda cacheado para offline.
@@ -541,12 +559,13 @@ http://127.0.0.1:8787/api
 12. En `Configuracion`, exportar JSON, crear backup, restaurar backup o exportar CSV.
 13. Para backend, importar ese JSON con `npm.cmd run backend:import -- archivo.json` o cargar demo con `npm.cmd run backend:seed`.
 14. Si se quiere trabajar contra SQLite en espejo, arrancar `npm.cmd run backend` y activar `api_mirror` en Configuracion.
+15. Si se quieren proteger operaciones destructivas, activar Seguridad local y guardar un PIN admin.
 
 ## QA
 
-- Tests automaticos: `npm.cmd test` (40 tests).
+- Tests automaticos: `npm.cmd test` (43 tests).
 - Checklist manual: `docs/QA_CHECKLIST.md`.
 - Backend futuro: `docs/BACKEND_PLAN.md`.
 - Roadmap: `docs/ROADMAP.md`.
 
-Ultima actualizacion: 2026-06-07.
+Ultima actualizacion: 2026-06-08.

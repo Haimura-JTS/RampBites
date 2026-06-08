@@ -36,6 +36,7 @@ Estado actual:
 - Implementado con `node:http` para mantener cero dependencias externas.
 - SQLite implementado con `node:sqlite` de Node 24.
 - Frontend conectado mediante sincronizacion manual y modo API espejo opcional.
+- Seguridad local frontend disponible para operaciones sensibles.
 - Express queda como adaptacion futura de `server/api.js`.
 
 Capas:
@@ -131,6 +132,12 @@ npm.cmd run backend:seed
 
 ## Autenticacion y Roles
 
+Estado actual:
+
+- Existe seguridad local con PIN admin hasheado para evitar acciones accidentales en un solo dispositivo.
+- No existe autenticacion backend real todavia.
+- No hay usuarios, sesiones de servidor ni roles aplicados en API.
+
 Roles sugeridos:
 
 - `admin`: configuracion, backups, importacion, reset.
@@ -172,6 +179,7 @@ Futuro:
 - `node:sqlite` esta marcado como experimental por Node 24.
 - Frontend no usa backend por defecto; `manual` sigue siendo el modo inicial.
 - Modo `api_mirror` reemplaza el dataset completo del backend en cada guardado local.
+- La seguridad local no protege contra manipulacion directa de LocalStorage.
 - API HTTP nativa pendiente de adaptar a Express si se acepta dependencia.
 
 ## Reglas Que Deben Sobrevivir

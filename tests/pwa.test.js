@@ -16,7 +16,8 @@ test('manifest define PWA instalable', async () => {
 test('service worker precachea shell y vista cocina', async () => {
   const serviceWorker = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
 
-  assert.match(serviceWorker, /ramp-bites-control-panel-v0\.11\.0/);
+  assert.match(serviceWorker, /ramp-bites-control-panel-v0\.12\.0/);
+  assert.match(serviceWorker, /src\/auth\.js/);
   assert.match(serviceWorker, /src\/views\/kitchenView\.js/);
   assert.match(serviceWorker, /caches\.open/);
   assert.match(serviceWorker, /request\.mode === 'navigate'/);

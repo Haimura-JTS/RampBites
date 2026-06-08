@@ -1,4 +1,11 @@
 import { createRampBitesApiClient, DEFAULT_API_BASE_URL } from './apiClient.js';
+import {
+  hasAdminPin,
+  lockAdminSession,
+  requestAdminUnlock,
+  setAdminPin,
+  unlockAdminSession
+} from './auth.js';
 import { APP_STAGE, APP_VERSION, DEFAULT_SETTINGS, ORDER_STATUS, PAYMENT_METHODS, STOCK_TYPES } from './constants.js';
 import { calculateLotSummaries } from './calculations.js';
 import { buildCsvExport } from './exporters.js';
@@ -185,6 +192,7 @@ function bindViewActions() {
   bindKitchenActions();
   bindStockActions();
   bindSettingsActions();
+  bindSecurityActions();
   bindBackupActions();
   bindBackendActions();
 }
@@ -824,11 +832,16 @@ function bindKitchenChecklistActions() {
 
 function bindSettingsActions() {
   const form = document.querySelector('[data-form="settings"]');
-  form?.addEventListener('submit', (event) => {
+  form?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const current = getData();
     const input = formToObject(form);
     input.demoMode = Boolean(form.elements.demoMode?.checked);
-    const result = saveSettings(getData(), input);
+    input.localAuthEnabled = Boolean(form.elements.localAuthEnabled?.checked);
+    const disablingSecurity = current.settings?.security?.localAuthEnabled && !input.localAuthEnabled;
+    if (disablingSecurity && !(await ensureAdminAccess('desactivar seguridad local'))) return;
+
+    const result = saveSettings(current, input);
     if (!result.ok) return showToast(result.errors.join(' '), 'danger');
     saveData(result.data);
     syncStorageModeLabel();
@@ -837,10 +850,51 @@ function bindSettingsActions() {
   });
 }
 
+function bindSecurityActions() {
+  const pinForm = document.querySelector('[data-form="security-pin"]');
+  pinForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = formToObject(pinForm);
+    if (input.adminPin !== input.adminPinConfirm) {
+      return showToast('Los PIN no coinciden.', 'danger');
+    }
+
+    try {
+      const result = await setAdminPin(getData(), input.adminPin);
+      if (!result.ok) return showToast(result.errors.join(' '), 'danger');
+      saveData(result.data);
+      clearForm(pinForm);
+      showToast('PIN admin guardado y proteccion activada.', 'success');
+      router.renderFromHash();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  });
+
+  document.querySelector('[data-action="unlock-admin"]')?.addEventListener('click', async () => {
+    const data = getData();
+    if (!hasAdminPin(data)) return showToast('Configura un PIN admin primero.', 'warning');
+    const pin = window.prompt('Introduce PIN admin:');
+    if (!pin) return;
+    const result = await unlockAdminSession(data, pin);
+    if (!result.ok) return showToast(result.errors.join(' '), 'danger');
+    saveData(result.data, { mirror: false });
+    showToast('Sesion admin desbloqueada.', 'success');
+    router.renderFromHash();
+  });
+
+  document.querySelector('[data-action="lock-admin"]')?.addEventListener('click', () => {
+    saveData(lockAdminSession(getData()), { mirror: false });
+    showToast('Sesion admin bloqueada.', 'success');
+    router.renderFromHash();
+  });
+}
+
 function bindBackupActions() {
-  document.querySelector('[data-action="reset-data"]')?.addEventListener('click', () => {
+  document.querySelector('[data-action="reset-data"]')?.addEventListener('click', async () => {
     const confirmed = window.confirm('Esto reiniciara los datos demo y guardara un backup local. Continuar?');
     if (!confirmed) return;
+    if (!(await ensureAdminAccess('reset demo'))) return;
     resetData();
     showToast('Datos demo reiniciados.', 'success');
     router.renderFromHash();
@@ -861,10 +915,11 @@ function bindBackupActions() {
     router.renderFromHash();
   });
 
-  document.querySelector('[data-action="restore-backup"]')?.addEventListener('click', () => {
+  document.querySelector('[data-action="restore-backup"]')?.addEventListener('click', async () => {
     const backupId = document.querySelector('[data-backup-select]')?.value ?? '';
     if (!backupId) return showToast('Selecciona un backup.', 'warning');
     if (!window.confirm('Restaurar backup seleccionado? Se creara un backup automatico antes.')) return;
+    if (!(await ensureAdminAccess('restaurar backup'))) return;
     try {
       restoreBackup(backupId);
       showToast('Backup restaurado.', 'success');
@@ -889,6 +944,10 @@ function bindBackupActions() {
   document.querySelector('[data-action="import-data"]')?.addEventListener('change', async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!(await ensureAdminAccess('importar JSON'))) {
+      event.target.value = '';
+      return;
+    }
 
     try {
       const text = await file.text();
@@ -917,6 +976,7 @@ function bindBackendActions() {
   document.querySelector('[data-action="backend-push"]')?.addEventListener('click', async (event) => {
     const confirmed = window.confirm('Enviar datos locales al backend? Esto reemplazara la base SQLite actual y creara backup backend.');
     if (!confirmed) return;
+    if (!(await ensureAdminAccess('enviar local al backend'))) return;
 
     await runBackendAction(event.currentTarget, async (client) => {
       const now = new Date().toISOString();
@@ -935,6 +995,7 @@ function bindBackendActions() {
   document.querySelector('[data-action="backend-pull"]')?.addEventListener('click', async (event) => {
     const confirmed = window.confirm('Traer datos del backend? Se creara backup local y se reemplazaran los datos actuales del navegador.');
     if (!confirmed) return;
+    if (!(await ensureAdminAccess('traer datos del backend'))) return;
 
     await runBackendAction(event.currentTarget, async (client) => {
       const current = getData();
@@ -966,6 +1027,7 @@ function bindBackendActions() {
   document.querySelector('[data-action="backend-seed"]')?.addEventListener('click', async (event) => {
     const confirmed = window.confirm('Cargar seed en backend? Esto reemplazara la base SQLite actual y creara backup backend.');
     if (!confirmed) return;
+    if (!(await ensureAdminAccess('cargar seed backend'))) return;
 
     await runBackendAction(event.currentTarget, async (client) => {
       await client.seed();
@@ -977,6 +1039,21 @@ function bindBackendActions() {
       router.renderFromHash();
     });
   });
+}
+
+async function ensureAdminAccess(actionLabel) {
+  const result = await requestAdminUnlock(getData(), {
+    message: `PIN admin para ${actionLabel}:`
+  });
+  if (!result.ok) {
+    showToast(result.errors.join(' '), 'warning');
+    return false;
+  }
+  if (!result.skipped && !result.alreadyUnlocked) {
+    saveData(result.data, { mirror: false });
+    showToast('Sesion admin desbloqueada.', 'success');
+  }
+  return true;
 }
 
 async function runBackendAction(button, callback) {

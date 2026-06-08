@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## [Unreleased - Etapa 12] - 2026-06-08
+
+### Added
+
+- Modulo `src/auth.js` para seguridad local.
+- PIN admin hasheado con salt mediante Web Crypto.
+- Sesion admin local en `sessionStorage` con caducidad configurable.
+- Panel `Seguridad local` en Configuracion.
+- Acciones para guardar PIN, desbloquear admin y bloquear admin.
+- Proteccion opcional para:
+  - importar JSON,
+  - reset demo,
+  - restaurar backups,
+  - enviar local al backend,
+  - traer backend a local,
+  - cargar seed backend.
+- Tests de seguridad local en `tests/auth.test.js`.
+
+### Changed
+
+- Version visible del proyecto actualizada a `0.12.0`.
+- `APP_STAGE` pasa a Etapa 12.
+- Cache PWA actualizado a `ramp-bites-control-panel-v0.12.0`.
+- `settings.security` se normaliza y migra junto con el resto de settings.
+
+### Notes
+
+- La seguridad local reduce accidentes en un uso de un solo dispositivo.
+- No sustituye autenticacion backend, usuarios reales, roles ni control multiusuario.
+
 ## [Unreleased - Etapa 11] - 2026-06-07
 
 ### Added
@@ -404,4 +434,5 @@ Durante el desarrollo inicial se usara version `0.x`.
 - `0.9.0`: backend local SQLite, API REST, migracion JSON y backups DB.
 - `0.10.0`: sincronizacion manual frontend/backend desde Configuracion.
 - `0.11.0`: modo API espejo opcional con carga inicial y guardado automatico.
+- `0.12.0`: seguridad local con PIN admin para operaciones sensibles.
 - `1.0.0`: primera version interna usable con exportacion/importacion y reportes basicos.

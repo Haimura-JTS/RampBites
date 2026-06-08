@@ -43,4 +43,7 @@ test('vista configuracion renderiza controles de sincronizacion backend', () => 
   assert.match(html, /data-action="backend-push"/);
   assert.match(html, /data-action="backend-pull"/);
   assert.match(html, /data-action="backend-backup"/);
+  assert.match(html, /name="localAuthEnabled"/);
+  assert.match(html, /data-form="security-pin"/);
+  assert.match(html, /data-action="lock-admin"/);
 });

@@ -951,6 +951,12 @@ export function saveSettings(data, input) {
       ...(data.settings?.backend ?? DEFAULT_SETTINGS.backend),
       baseUrl: input.backendBaseUrl?.trim() || data.settings?.backend?.baseUrl || DEFAULT_SETTINGS.backend.baseUrl,
       syncMode: backendSyncMode
+    },
+    security: {
+      ...DEFAULT_SETTINGS.security,
+      ...(data.settings?.security ?? {}),
+      localAuthEnabled: Boolean(input.localAuthEnabled),
+      adminSessionMinutes: positiveNumber(input.adminSessionMinutes, DEFAULT_SETTINGS.security.adminSessionMinutes)
     }
   };
   touch(data);
