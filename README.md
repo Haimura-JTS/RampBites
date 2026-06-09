@@ -4,9 +4,9 @@ Herramienta interna local-first para gestionar la produccion artesanal de burrit
 
 ## Estado del Proyecto
 
-Etapa actual: **ETAPA 15 - Autenticacion backend y roles**.
+Etapa actual: **ETAPA 16 - Sincronizacion por coleccion y conflictos basicos**.
 
-La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable, proteccion local de operaciones sensibles, reservas de stock al confirmar pedidos, separacion visual entre stock fisico/reservado/disponible y autenticacion backend con sesiones y roles.
+La app ya abre como panel local-first con navegacion, LocalStorage endurecido, seed inicial, calculos base, dashboard avanzado, configuracion avanzada, gestion funcional de productos/proveedores/compras/stock/historial de precios, produccion por tandas, lotes trazables, alertas de caducidad, saborizacion desde carne neutra, recetas editables, desglose de coste por burrito, comparador de menu, simulador de produccion, clientes, pedidos, pagos, feedback, planificacion de pedidos proximos, lista de compra automatica, reportes internos, backups restaurables, exportaciones CSV/JSON, tests, PWA instalable, modo cocina movil, backend local SQLite, sincronizacion manual, modo API espejo configurable, sincronizacion por coleccion con conflictos basicos, proteccion local de operaciones sensibles, reservas de stock al confirmar pedidos, separacion visual entre stock fisico/reservado/disponible y autenticacion backend con sesiones y roles.
 
 ## Objetivo del Producto
 
@@ -51,7 +51,7 @@ No se debe producir mas carne de la proyectada para 2 dias.
 - PWA con `manifest.json` y service worker para shell offline.
 - Backend local con `node:http` y `node:sqlite` de Node 24.
 - API REST preparada para migrar a Express si se acepta esa dependencia.
-- Puente frontend/backend mediante `src/apiClient.js`, controles de sincronizacion manual y modo API espejo opcional.
+- Puente frontend/backend mediante `src/apiClient.js`, `src/sync.js`, controles de sincronizacion manual, sync por coleccion y modo API espejo opcional.
 - Seguridad local opcional mediante PIN admin hasheado y sesion en `sessionStorage`.
 - Autenticacion backend opcional con usuarios SQLite, sesiones Bearer token y roles `admin`, `operator`, `viewer`.
 
@@ -325,6 +325,7 @@ Alertas de precio:
 /src/seed.js
 /src/router.js
 /src/html.js
+/src/sync.js
 /src/services/businessService.js
 /src/apiClient.js
 
@@ -398,7 +399,8 @@ Alertas de precio:
 - **Etapa 13**: reservas de stock al confirmar pedidos y conversion a venta al entregar. **Completada**.
 - **Etapa 14**: stock fisico, reservado y disponible en UI, reportes y CSV. **Completada**.
 - **Etapa 15**: autenticacion backend real con sesiones y roles activos en API/UI. **Completada**.
-- **Etapa 16+**: multiusuario, resolucion de conflictos y mejoras avanzadas.
+- **Etapa 16**: sincronizacion por coleccion y conflictos basicos LocalStorage/SQLite. **Completada**.
+- **Etapa 17+**: multiusuario, tombstones de borrado, auditoria visible y mejoras avanzadas.
 
 ## Continuidad
 
@@ -507,6 +509,7 @@ Endpoints principales:
 - `GET /api/reports/prices`
 - `GET /api/reports/costs`
 - `GET /api/backups`, `POST /api/backups`
+- `POST /api/sync/:collection`
 
 ## Autenticacion Backend
 
@@ -540,8 +543,19 @@ Controles disponibles:
 - comprobar `GET /api/health`,
 - enviar datos locales al backend con backup SQLite previo,
 - traer datos del backend creando backup local antes,
+- sincronizar colecciones sin reemplazar todo el dataset,
 - crear backup backend,
 - cargar seed backend.
+
+La sync por coleccion:
+
+- lee cada coleccion con los endpoints REST,
+- fusiona por fecha de actualizacion,
+- sube al backend solo items locales cambiados mediante `POST /api/sync/:collection`,
+- conserva la version local cuando local y remoto cambiaron despues de la ultima sync,
+- guarda resumen y conflictos en `settings.backend.collectionSync`.
+
+Limitacion actual: los borrados aun no se propagan porque falta un modelo de tombstones o `deletedAt`.
 
 Si el backend no esta disponible, la app no bloquea el uso local; queda LocalStorage como base de trabajo.
 
@@ -582,7 +596,7 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 - `Reportes`: revisar produccion, ventas, proveedores/precios y costes por receta.
 - `Configuracion`: ajustar multiplicadores, conservacion, modo demo, JSON, backups y CSV.
 - `Configuracion > Seguridad local`: activar PIN admin, desbloquear/bloquear sesion y definir minutos de sesion.
-- `Configuracion > Backend SQLite`: comprobar API, enviar local, traer backend, crear backup backend, cargar seed backend y activar `api_mirror`.
+- `Configuracion > Backend SQLite`: comprobar API, enviar local, traer backend, sincronizar colecciones, crear backup backend, cargar seed backend y activar `api_mirror`.
 - `Configuracion > Autenticacion backend`: crear primer admin, iniciar sesion, cerrar sesion y crear usuarios con rol.
 - `Cocina`: pantalla movil con produccion rapida, pedido rapido, temporizador, checklist y accesos grandes.
 - PWA: instalable cuando el navegador lo permite; el shell principal queda cacheado para offline.
@@ -603,13 +617,14 @@ El PIN se guarda hasheado con salt en la configuracion local. La sesion admin vi
 11. En `Reportes`, revisar ventas, produccion, proveedores y costes.
 12. En `Configuracion`, exportar JSON, crear backup, restaurar backup o exportar CSV.
 13. Para backend, importar ese JSON con `npm.cmd run backend:import -- archivo.json` o cargar demo con `npm.cmd run backend:seed`.
-14. Si se quiere trabajar contra SQLite en espejo, arrancar `npm.cmd run backend` y activar `api_mirror` en Configuracion.
-15. Si se quieren proteger operaciones destructivas, activar Seguridad local y guardar un PIN admin.
-16. Si se quiere proteger la API SQLite, crear primer admin en `Autenticacion backend` e iniciar sesion.
+14. Si se quiere sincronizar sin reemplazar todo, arrancar `npm.cmd run backend` y usar `Sync colecciones` en Configuracion.
+15. Si se quiere trabajar contra SQLite en espejo, activar `api_mirror` en Configuracion.
+16. Si se quieren proteger operaciones destructivas, activar Seguridad local y guardar un PIN admin.
+17. Si se quiere proteger la API SQLite, crear primer admin en `Autenticacion backend` e iniciar sesion.
 
 ## QA
 
-- Tests automaticos: `npm.cmd test` (49 tests).
+- Tests automaticos: `npm.cmd test` (52 tests).
 - Checklist manual: `docs/QA_CHECKLIST.md`.
 - Backend futuro: `docs/BACKEND_PLAN.md`.
 - Roadmap: `docs/ROADMAP.md`.

@@ -1,5 +1,5 @@
-export const APP_VERSION = '0.15.0';
-export const APP_STAGE = 'Etapa 15';
+export const APP_VERSION = '0.16.0';
+export const APP_STAGE = 'Etapa 16';
 export const STORAGE_KEY = 'ramp-bites-control-panel:v1';
 export const BACKUP_KEY = 'ramp-bites-control-panel:backup';
 export const SCHEMA_VERSION = 1;
@@ -174,7 +174,18 @@ export const DEFAULT_SETTINGS = {
     syncMode: 'manual',
     lastStatus: '',
     lastCheckedAt: '',
-    lastSyncAt: ''
+    lastSyncAt: '',
+    collectionSync: {
+      lastSyncAt: '',
+      lastRunAt: '',
+      summary: {
+        collections: 0,
+        pushed: 0,
+        pulled: 0,
+        conflicts: 0
+      },
+      conflicts: []
+    }
   },
   security: {
     localAuthEnabled: false,

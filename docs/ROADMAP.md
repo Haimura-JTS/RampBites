@@ -1,10 +1,10 @@
 # Roadmap
 
-Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 15 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, seguridad local, reservas de stock por pedido, control de stock fisico/reservado/disponible y autenticacion backend con roles.
+Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 16 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, sync por coleccion, seguridad local, reservas de stock por pedido, control de stock fisico/reservado/disponible y autenticacion backend con roles.
 
 ## MVP Local
 
-Estado: completado en Etapas 0-15.
+Estado: completado en Etapas 0-16.
 
 Incluye:
 
@@ -42,6 +42,7 @@ Incluye:
 - backups de base de datos,
 - sincronizacion manual LocalStorage/SQLite,
 - modo API espejo con carga inicial desde backend y envio automatico de guardados,
+- sincronizacion por coleccion con conflictos basicos,
 - seguridad local con PIN admin para operaciones sensibles,
 - reservas de stock al confirmar pedidos y conversion a venta al entregar,
 - separacion de stock fisico, reservado y disponible en UI, reportes y CSV,
@@ -51,7 +52,7 @@ Incluye:
 
 Objetivo: pasar de LocalStorage a Node.js + SQLite y preparar Express.
 
-Estado: base local completada en Etapa 9, sincronizacion manual en Etapa 10, API espejo en Etapa 11 y autenticacion backend en Etapa 15.
+Estado: base local completada en Etapa 9, sincronizacion manual en Etapa 10, API espejo en Etapa 11, autenticacion backend en Etapa 15 y sync por coleccion en Etapa 16.
 
 Incluye:
 
@@ -63,10 +64,12 @@ Incluye:
 - Cliente API en `src/apiClient.js`.
 - Modo `api_mirror` desde Configuracion.
 - Auth backend con roles `admin`, `operator`, `viewer`.
+- Sync por coleccion mediante `POST /api/sync/:collection`.
 
 Pendiente:
 
-- sincronizacion por coleccion y resolucion de conflictos,
+- tombstones para borrados,
+- resolucion manual de conflictos,
 - instalar/adaptar Express si se acepta dependencia externa,
 - multiusuario.
 

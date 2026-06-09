@@ -35,7 +35,7 @@ Estado actual:
 
 - Implementado con `node:http` para mantener cero dependencias externas.
 - SQLite implementado con `node:sqlite` de Node 24.
-- Frontend conectado mediante sincronizacion manual y modo API espejo opcional.
+- Frontend conectado mediante sincronizacion manual, sync por coleccion y modo API espejo opcional.
 - Seguridad local frontend disponible para operaciones sensibles.
 - Autenticacion backend disponible con usuarios SQLite, sesiones Bearer token y roles.
 - Express queda como adaptacion futura de `server/api.js`.
@@ -114,6 +114,7 @@ Estas tablas ya existen en el schema inicial de `server/database.js`; varias gua
 - `GET /api/auth/users`
 - `POST /api/auth/users`
 - `POST /api/auth/users/:id/deactivate`
+- `POST /api/sync/:collection`
 
 ## Migracion Desde LocalStorage
 
@@ -140,6 +141,22 @@ Tambien se puede cargar seed:
 ```bash
 npm.cmd run backend:seed
 ```
+
+## Sincronizacion por Coleccion
+
+Estado actual:
+
+- `GET /api/:collection` permite leer colecciones desde SQLite.
+- `POST /api/sync/:collection` permite upsert raw por coleccion.
+- El upsert raw evita ejecutar de nuevo reglas de negocio de compras, producciones o pedidos ya trazados.
+- El frontend fusiona por fecha de actualizacion y conserva la version local ante conflicto.
+- El resumen queda en `settings.backend.collectionSync`.
+
+Pendiente:
+
+- tombstones o `deletedAt` para propagar borrados,
+- resolucion manual de conflictos,
+- auditoria visible de decisiones de merge.
 
 ## Autenticacion y Roles
 
@@ -192,6 +209,8 @@ Futuro:
 - `node:sqlite` esta marcado como experimental por Node 24.
 - Frontend no usa backend por defecto; `manual` sigue siendo el modo inicial.
 - Modo `api_mirror` reemplaza el dataset completo del backend en cada guardado local.
+- La sync por coleccion no propaga borrados todavia.
+- La resolucion de conflictos es local-first y no manual.
 - La seguridad local no protege contra manipulacion directa de LocalStorage.
 - API HTTP nativa pendiente de adaptar a Express si se acepta dependencia.
 

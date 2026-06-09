@@ -236,6 +236,7 @@ function getRequiredRole(db, request, segments) {
   const resource = segments[1] ?? '';
   if (!resource || resource === 'health' || resource === 'auth') return null;
   if (request.method === 'GET') return 'viewer';
+  if (resource === 'sync') return 'admin';
   if (['data', 'seed', 'import', 'settings'].includes(resource)) return 'admin';
   if (resource === 'backups') return segments[3] === 'restore' || request.method === 'POST' ? 'admin' : 'viewer';
   if (request.method === 'DELETE') return 'admin';

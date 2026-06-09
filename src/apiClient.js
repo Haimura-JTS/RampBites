@@ -24,6 +24,7 @@ export function createRampBitesApiClient(baseUrl = DEFAULT_API_BASE_URL, options
     create: (resource, item) => requestJson(normalizedBaseUrl, `/${resource}`, { method: 'POST', body: item, getToken }),
     update: (resource, id, patch) => requestJson(normalizedBaseUrl, `/${resource}/${encodeURIComponent(id)}`, { method: 'PATCH', body: patch, getToken }),
     remove: (resource, id) => requestJson(normalizedBaseUrl, `/${resource}/${encodeURIComponent(id)}`, { method: 'DELETE', getToken }),
+    syncCollection: (resource, items) => requestJson(normalizedBaseUrl, `/sync/${resource}`, { method: 'POST', body: { items }, getToken }).then((response) => response.items),
     action: (resource, id, action, body = {}) => requestJson(
       normalizedBaseUrl,
       `/${resource}/${encodeURIComponent(id)}/${action}`,

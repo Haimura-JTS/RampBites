@@ -104,6 +104,8 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Crear usuario `viewer` y confirmar que puede leer pero no crear datos.
 - Crear usuario `operator` y confirmar que puede crear clientes/pedidos pero no ejecutar seed/import.
 - Confirmar que no se puede desactivar el ultimo admin activo.
+- Ejecutar `Sync colecciones` con admin y confirmar resumen de subidos, traidos y conflictos.
+- Confirmar que un usuario `operator` no puede llamar a sync por coleccion en backend protegido.
 - Si se usa `api_mirror`, confirmar que hay sesion backend antes de sincronizar.
 
 ## Responsive y Accesibilidad
@@ -118,7 +120,8 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 ## Riesgos Aceptados en MVP
 
 - No hay control de concurrencia multiusuario para reservas.
-- Hay roles backend, pero aun no hay resolucion de conflictos multiusuario.
+- Hay roles backend y conflictos basicos local-first, pero aun no hay resolucion manual multiusuario.
+- La sync por coleccion aun no propaga borrados.
 - LocalStorage puede borrarse desde el navegador.
 - Backup restaurable vive en el mismo navegador.
 - No sustituye cumplimiento legal alimentario.

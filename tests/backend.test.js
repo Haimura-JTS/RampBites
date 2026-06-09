@@ -48,6 +48,13 @@ test('backend API expone health, colecciones, escritura, reportes y backup', asy
 
     const products = await client.list('products');
     assert.equal(products.length > 0, true);
+    const syncResult = await client.syncCollection('products', [{
+      ...products[0],
+      name: 'Producto sincronizado raw',
+      updatedAt: '2026-06-09T12:00:00.000Z'
+    }]);
+    assert.equal(syncResult[0].name, 'Producto sincronizado raw');
+    assert.equal((await client.get('products', products[0].id)).name, 'Producto sincronizado raw');
 
     const createdClient = await postJson(`${baseUrl}/clients`, {
       name: 'Cliente API',
@@ -139,6 +146,10 @@ test('backend auth protege API con sesiones y roles', async () => {
 
     await assert.rejects(
       () => operatorClient.seed(),
+      /Rol requerido: admin/
+    );
+    await assert.rejects(
+      () => operatorClient.syncCollection('products', [products[0]]),
       /Rol requerido: admin/
     );
 

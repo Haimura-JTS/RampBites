@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [Unreleased - Etapa 16] - 2026-06-09
+
+### Added
+
+- Modulo `src/sync.js` para fusionar colecciones LocalStorage/SQLite por fecha de actualizacion.
+- Deteccion basica de conflictos cuando local y remoto cambiaron despues de la ultima sync.
+- Resolucion local-first de conflictos con resumen guardado en `settings.backend.collectionSync`.
+- Endpoint backend `POST /api/sync/:collection` para upsert raw sin recalcular reglas de negocio ni duplicar trazabilidad.
+- Cliente API `syncCollection(resource, items)`.
+- Boton `Sync colecciones` en Configuracion > Backend SQLite.
+- Tests de merge, conflictos, sync por coleccion y permiso admin del endpoint.
+
+### Changed
+
+- Version visible del proyecto actualizada a `0.16.0`.
+- `APP_STAGE` pasa a Etapa 16.
+- Cache PWA actualizado a `ramp-bites-control-panel-v0.16.0`.
+- El service worker precachea `src/sync.js`.
+
+### Notes
+
+- La sync por coleccion no propaga borrados todavia; falta implementar tombstones o `deletedAt`.
+- `api_mirror` sigue disponible como modo espejo completo, pero puede pisar cambios concurrentes.
+- El endpoint de sync requiere rol `admin` cuando la autenticacion backend esta activa.
+
 ## [Unreleased - Etapa 15] - 2026-06-09
 
 ### Added
@@ -518,4 +543,5 @@ Durante el desarrollo inicial se usara version `0.x`.
 - `0.13.0`: reservas de stock al confirmar pedidos.
 - `0.14.0`: stock fisico, reservado y disponible.
 - `0.15.0`: autenticacion backend con sesiones y roles.
+- `0.16.0`: sincronizacion por coleccion con conflictos basicos.
 - `1.0.0`: primera version interna usable con exportacion/importacion y reportes basicos.

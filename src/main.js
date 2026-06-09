@@ -27,6 +27,7 @@ import {
   saveData,
   isBackendMirrorEnabled
 } from './storage.js';
+import { syncCollectionsWithBackend } from './sync.js';
 import { router } from './router.js';
 import { orderItemRow } from './views/ordersView.js';
 import { productionInputRow } from './views/productionView.js';
@@ -1094,6 +1095,40 @@ function bindBackendActions() {
         lastSyncAt: new Date().toISOString()
       }), { mirror: false });
       showToast('Datos traidos desde backend.', 'success');
+      router.renderFromHash();
+    });
+  });
+
+  document.querySelector('[data-action="backend-sync-collections"]')?.addEventListener('click', async (event) => {
+    const confirmed = window.confirm('Sincronizar colecciones con backend? Se creara backup local. Los borrados aun no se sincronizan automaticamente.');
+    if (!confirmed) return;
+    if (!(await ensureAdminAccess('sincronizar colecciones'))) return;
+
+    await runBackendAction(event.currentTarget, async (client) => {
+      const current = getData();
+      createManualBackup('before_backend_collection_sync');
+      const result = await syncCollectionsWithBackend(current, client, {
+        lastSyncAt: current.settings?.backend?.collectionSync?.lastSyncAt || current.settings?.backend?.lastSyncAt || ''
+      });
+      const now = new Date().toISOString();
+      const status = `sync colecciones: ${result.summary.pushed} subidos, ${result.summary.pulled} traidos, ${result.summary.conflicts} conflictos`;
+      saveData(applyBackendSettingsPatch(result.data, {
+        baseUrl: getBackendBaseUrl(),
+        lastStatus: status,
+        lastCheckedAt: now,
+        lastSyncAt: now,
+        collectionSync: {
+          lastSyncAt: now,
+          lastRunAt: now,
+          summary: result.summary,
+          conflicts: result.conflicts.slice(0, 20)
+        }
+      }), { mirror: false });
+      syncStorageModeLabel();
+      showToast(
+        result.summary.conflicts > 0 ? `${status}. Se resolvieron conservando la version local.` : status,
+        result.summary.conflicts > 0 ? 'warning' : 'success'
+      );
       router.renderFromHash();
     });
   });

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ramp-bites-control-panel-v0.15.0';
+const CACHE_NAME = 'ramp-bites-control-panel-v0.16.0';
 
 const APP_SHELL = [
   './',
@@ -17,6 +17,7 @@ const APP_SHELL = [
   './src/router.js',
   './src/seed.js',
   './src/storage.js',
+  './src/sync.js',
   './src/validators.js',
   './src/apiClient.js',
   './src/services/businessService.js',

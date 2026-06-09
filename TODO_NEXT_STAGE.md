@@ -2,51 +2,29 @@
 
 ## Checkpoint Actual
 
-Etapa cerrada: **ETAPA 15 - Autenticacion backend y roles**.
+Etapa cerrada: **ETAPA 16 - Sincronizacion por coleccion y conflictos basicos**.
 
 Fecha: 2026-06-09.
 
 ## Completado
 
 - Se leyeron `README.md`, `CHANGELOG.md` y `TODO_NEXT_STAGE.md` antes de modificar.
-- Se creo `server/auth.js` con:
-  - bootstrap del primer admin,
-  - login/logout,
-  - sesiones backend con Bearer token,
-  - hash de contrasena con `scrypt`,
-  - hash de token de sesion en SQLite,
-  - roles `admin`, `operator`, `viewer`,
-  - auditoria basica de bootstrap/login/desactivacion.
-- Se amplio schema SQLite con:
-  - `user_roles`,
-  - `backend_sessions`,
-  - roles seed internos.
-- La API queda abierta mientras no exista usuario activo.
-- Al crear el primer admin, la API exige `Authorization: Bearer <token>`.
-- Permisos aplicados:
-  - lectura: `viewer`,
-  - operaciones de negocio: `operator`,
-  - import/seed/settings/backups destructivos: `admin`.
-- Se agregaron endpoints:
-  - `GET /api/auth/status`,
-  - `POST /api/auth/bootstrap`,
-  - `POST /api/auth/login`,
-  - `POST /api/auth/logout`,
-  - `GET /api/auth/me`,
-  - `GET /api/auth/users`,
-  - `POST /api/auth/users`,
-  - `POST /api/auth/users/:id/deactivate`.
-- No se permite desactivar el ultimo admin activo.
-- `src/apiClient.js` envia token Bearer desde `sessionStorage`.
-- Configuracion incluye panel de Autenticacion backend:
-  - estado,
-  - crear primer admin,
-  - login,
-  - logout,
-  - crear usuario con rol.
-- CORS backend permite cabecera `Authorization`.
-- Version actualizada a `0.15.0`, `APP_STAGE` a Etapa 15 y cache PWA a `0.15.0`.
-- Se agregaron tests de auth backend y roles.
+- Se creo `src/sync.js` con:
+  - mapa de colecciones frontend/backend,
+  - merge por coleccion,
+  - comparacion por fecha de actualizacion,
+  - deteccion basica de conflictos local/remoto,
+  - resolucion local-first,
+  - resumen de items subidos, traidos y conflictos.
+- Se agrego `syncCollection(resource, items)` en `src/apiClient.js`.
+- Se agrego endpoint backend `POST /api/sync/:collection`.
+- El endpoint de sync usa upsert raw sobre SQLite para no recalcular compras, producciones o movimientos ya trazados.
+- El endpoint de sync requiere rol `admin` cuando la autenticacion backend esta activa.
+- Configuracion > Backend SQLite incluye boton `Sync colecciones`.
+- La UI crea backup local antes de sincronizar colecciones.
+- La UI guarda resumen y conflictos en `settings.backend.collectionSync`.
+- Version actualizada a `0.16.0`, `APP_STAGE` a Etapa 16 y cache PWA a `0.16.0`.
+- Se amplio la cobertura de tests para merge, conflictos, sync y endpoint backend.
 
 ## Archivos Modificados
 
@@ -57,23 +35,19 @@ Fecha: 2026-06-09.
 - `service-worker.js`
 - `server/api.js`
 - `server/auth.js`
-- `server/database.js`
 - `src/apiClient.js`
 - `src/constants.js`
 - `src/main.js`
+- `src/sync.js`
 - `src/views/settingsView.js`
 - `tests/backend.test.js`
+- `tests/backendSync.test.js`
 - `tests/pwa.test.js`
 - `tests/settingsBackend.test.js`
-- `docs/ARCHITECTURE.md`
-- `docs/BACKEND_PLAN.md`
-- `docs/INDEX.md`
-- `docs/QA_CHECKLIST.md`
-- `docs/ROADMAP.md`
 
 ## Verificacion
 
-- `npm.cmd test` pasa correctamente: 49/49.
+- `npm.cmd test` pasa correctamente: 52/52.
 - `node --check` paso para JS/MJS de `src/`, `server/` y `scripts/`.
 
 ## Etapa Siguiente
@@ -82,18 +56,19 @@ No hay siguiente prompt obligatorio definido.
 
 Opciones razonables para una proxima etapa:
 
-- sincronizacion por coleccion en vez de reemplazo completo,
-- resolucion de conflictos entre LocalStorage y SQLite,
-- auditoria visible en UI,
-- bloqueo/transacciones especificas para reservas multiusuario,
+- implementar tombstones o `deletedAt` para sincronizar borrados,
+- crear UI de auditoria visible para conflictos y acciones backend,
+- permitir resolver conflictos manualmente en vez de resolver siempre local-first,
+- bloquear/transaccionar reservas multiusuario,
 - adaptar `server/api.js` a Express si se acepta dependencia,
 - gestionar usuarios backend con UI completa.
 
 ## Riesgos o Bugs Pendientes
 
-- La autenticacion backend protege endpoints, pero no resuelve conflictos de varios usuarios editando a la vez.
+- La sync por coleccion conserva local ante conflicto; no hay resolucion manual aun.
+- Los borrados no se sincronizan hasta definir tombstones.
 - Si dos navegadores usan `api_mirror`, todavia pueden pisarse cambios por reemplazo completo de dataset.
-- Las sesiones se guardan en `sessionStorage`; al cerrar pestana hay que iniciar sesion de nuevo.
+- Las sesiones backend se guardan en `sessionStorage`; al cerrar pestana hay que iniciar sesion de nuevo.
 - La API se mantiene abierta si no existe ningun usuario activo para conservar compatibilidad local.
 - Express no esta instalado; la API usa `node:http` para seguir sin dependencias externas.
 - `node:sqlite` emite aviso experimental en Node 24.

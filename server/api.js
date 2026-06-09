@@ -119,7 +119,10 @@ async function handleRequest(request, response, database) {
     return sendJson(response, 200, {
       ok: true,
       name: 'Ramp Bites Backend',
-      endpoints: Object.keys(API_ENDPOINTS).map((endpoint) => `/api/${endpoint}`)
+      endpoints: [
+        ...Object.keys(API_ENDPOINTS).map((endpoint) => `/api/${endpoint}`),
+        '/api/sync/:collection'
+      ]
     });
   }
 
@@ -137,6 +140,7 @@ async function handleRequest(request, response, database) {
   if (segments[1] === 'backups') return handleBackups(request, response, database, segments);
   if (segments[1] === 'reports') return handleReports(request, response, database, segments[2]);
   if (segments[1] === 'settings') return handleSettings(request, response, database);
+  if (segments[1] === 'sync') return handleSync(request, response, database, segments);
 
   const collection = API_ENDPOINTS[segments[1]];
   if (collection) return handleCollection(request, response, database, collection, segments);
@@ -341,6 +345,39 @@ async function handleCollection(request, response, database, collection, segment
   }
 
   return methodNotAllowed(response);
+}
+
+async function handleSync(request, response, database, segments) {
+  if (request.method !== 'POST') return methodNotAllowed(response);
+  const collection = API_ENDPOINTS[segments[2] ?? ''];
+  if (!collection) return sendJson(response, 404, { ok: false, error: 'Coleccion de sync no encontrada.' });
+
+  const body = await readJsonBody(request);
+  if (!Array.isArray(body.items)) {
+    return sendJson(response, 400, { ok: false, error: 'items debe ser un array.' });
+  }
+
+  const db = database.open();
+  const saved = [];
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    for (const item of body.items) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        throw new Error('Cada item de sync debe ser un objeto.');
+      }
+      saved.push(upsertCollectionItem(db, collection, item));
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+
+  return sendJson(response, 200, {
+    ok: true,
+    count: saved.length,
+    items: saved
+  });
 }
 
 async function handleCollectionAction(request, response, database, collection, id, action) {

@@ -14,7 +14,7 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 - Migracion futura a IndexedDB, SQLite o backend Node.js.
 - PWA instalable con app shell cacheada para uso offline del panel.
 - Backend SQLite local disponible como capa paralela al frontend local-first.
-- Sincronizacion manual LocalStorage/SQLite desde Configuracion y modo API espejo opcional.
+- Sincronizacion manual LocalStorage/SQLite, sync por coleccion y modo API espejo opcional desde Configuracion.
 - Seguridad local opcional para operaciones sensibles.
 - Separacion explicita entre stock fisico, reservado y disponible.
 - Autenticacion backend opcional con sesiones y roles cuando existe usuario activo.
@@ -54,6 +54,7 @@ Archivos:
 - `src/reports.js`
 - `src/exporters.js`
 - `src/auth.js`
+- `src/sync.js`
 
 Responsabilidades:
 
@@ -70,6 +71,8 @@ Responsabilidades:
 - CSV.
 - PIN admin local,
 - sesion admin local.
+- merge por coleccion LocalStorage/SQLite,
+- deteccion basica de conflictos de sincronizacion.
 
 ### Servicios de Aplicacion
 
@@ -140,8 +143,9 @@ Responsabilidades:
 - servir reportes desde SQLite,
 - autenticar usuarios backend,
 - aplicar roles `viewer`, `operator` y `admin`,
+- exponer `POST /api/sync/:collection` para upsert raw por coleccion,
 - preparar migracion futura a Express.
-- sincronizar datos locales y backend desde la UI, manualmente o en modo API espejo.
+- sincronizar datos locales y backend desde la UI, manualmente, por coleccion o en modo API espejo.
 
 ### Modelos y Validacion
 
@@ -229,6 +233,8 @@ Colecciones:
 - Los pedidos entregados no se editan; se corrigen con ajuste trazable.
 - Backups se crean antes de import, reset y restore.
 - El modo API espejo crea backup local antes de cargar datos del backend al iniciar.
+- La sync por coleccion crea backup local, fusiona por fecha de actualizacion y conserva la version local ante conflicto.
+- La sync por coleccion no propaga borrados todavia porque falta tombstone o `deletedAt`.
 - La seguridad local puede pedir PIN admin antes de operaciones destructivas.
 - Imports legacy sin `schemaVersion` migran a schema actual.
 - Imports con schema futuro se rechazan.
@@ -251,6 +257,7 @@ Estado actual:
 - SQLite local implementado con `node:sqlite`.
 - API REST implementada con `node:http`.
 - UI conectada al backend mediante acciones manuales y modo API espejo opcional.
+- Sync por coleccion implementada con endpoint raw y conflictos basicos local-first.
 - Seguridad local implementada en frontend con PIN admin hasheado.
 - Autenticacion backend implementada con usuarios SQLite, roles y sesiones.
 - Express queda como adaptacion futura para mantener el proyecto sin dependencias externas por ahora.

@@ -7,6 +7,78 @@ import {
   saveData,
   waitForBackendMirror
 } from '../src/storage.js';
+import { mergeCollection, syncCollectionsWithBackend } from '../src/sync.js';
+
+test('merge por coleccion trae remoto mas nuevo y sube local mas nuevo', () => {
+  const result = mergeCollection(
+    [
+      { id: 'local-newer', name: 'Local', updatedAt: '2026-06-09T11:00:00.000Z' },
+      { id: 'remote-newer', name: 'Viejo local', updatedAt: '2026-06-09T09:00:00.000Z' }
+    ],
+    [
+      { id: 'local-newer', name: 'Viejo remoto', updatedAt: '2026-06-09T09:00:00.000Z' },
+      { id: 'remote-newer', name: 'Remoto', updatedAt: '2026-06-09T12:00:00.000Z' }
+    ],
+    { collection: 'products', lastSyncAt: '2026-06-09T10:00:00.000Z' }
+  );
+
+  assert.equal(result.summary.toPush, 1);
+  assert.equal(result.summary.pulled, 1);
+  assert.equal(result.summary.conflicts, 0);
+  assert.equal(result.items.find((item) => item.id === 'local-newer').name, 'Local');
+  assert.equal(result.items.find((item) => item.id === 'remote-newer').name, 'Remoto');
+});
+
+test('merge por coleccion detecta conflicto y conserva local', () => {
+  const result = mergeCollection(
+    [{ id: 'prod-1', name: 'Version local', updatedAt: '2026-06-09T11:00:00.000Z' }],
+    [{ id: 'prod-1', name: 'Version remota', updatedAt: '2026-06-09T11:30:00.000Z' }],
+    { collection: 'products', lastSyncAt: '2026-06-09T10:00:00.000Z' }
+  );
+
+  assert.equal(result.summary.toPush, 1);
+  assert.equal(result.summary.pulled, 0);
+  assert.equal(result.summary.conflicts, 1);
+  assert.equal(result.items[0].name, 'Version local');
+  assert.deepEqual(result.conflicts[0], {
+    collection: 'products',
+    id: 'prod-1',
+    localUpdatedAt: '2026-06-09T11:00:00.000Z',
+    remoteUpdatedAt: '2026-06-09T11:30:00.000Z',
+    resolution: 'local',
+    reason: 'local_and_remote_changed'
+  });
+});
+
+test('sync por coleccion usa endpoint raw y fusiona remoto en local', async () => {
+  const data = createSeedData();
+  data.products = [{ id: 'prod-local', name: 'Local', updatedAt: '2026-06-09T11:00:00.000Z' }];
+  data.suppliers = [];
+
+  const pushed = [];
+  const client = {
+    list: async (resource) => ({
+      products: [{ id: 'prod-local', name: 'Remoto viejo', updatedAt: '2026-06-09T09:00:00.000Z' }],
+      suppliers: [{ id: 'supplier-remote', name: 'Proveedor remoto', updatedAt: '2026-06-09T11:30:00.000Z' }]
+    })[resource] ?? [],
+    syncCollection: async (resource, items) => {
+      pushed.push({ resource, items });
+      return items;
+    }
+  };
+
+  const result = await syncCollectionsWithBackend(data, client, {
+    collections: ['products', 'suppliers'],
+    lastSyncAt: '2026-06-09T10:00:00.000Z'
+  });
+
+  assert.equal(result.summary.pushed, 1);
+  assert.equal(result.summary.pulled, 1);
+  assert.equal(pushed.length, 1);
+  assert.equal(pushed[0].resource, 'products');
+  assert.equal(pushed[0].items[0].id, 'prod-local');
+  assert.equal(result.data.suppliers[0].id, 'supplier-remote');
+});
 
 test('modo manual no envia datos al backend al guardar', async () => {
   const storage = setupLocalStorage();

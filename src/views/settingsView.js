@@ -11,6 +11,8 @@ export function renderSettings({ data, actions }) {
   const security = getSecuritySettings(data);
   const backups = typeof actions?.listBackups === 'function' ? actions.listBackups() : [];
   const backendAuth = backend.auth ?? {};
+  const collectionSync = backend.collectionSync ?? {};
+  const collectionSyncSummary = collectionSync.summary ?? {};
 
   return `
     <section class="view-header">
@@ -113,14 +115,18 @@ export function renderSettings({ data, actions }) {
           <div><dt>Modo</dt><dd>${escapeHtml(backend.syncMode === 'api_mirror' ? 'api espejo' : 'manual')}</dd></div>
           <div><dt>Ultima comprobacion</dt><dd>${escapeHtml(backend.lastCheckedAt || 'sin datos')}</dd></div>
           <div><dt>Ultima sincronizacion</dt><dd>${escapeHtml(backend.lastSyncAt || 'sin datos')}</dd></div>
+          <div><dt>Sync colecciones</dt><dd>${escapeHtml(collectionSync.lastSyncAt || 'sin datos')}</dd></div>
+          <div><dt>Resumen colecciones</dt><dd>${Number(collectionSyncSummary.pushed ?? 0)} subidos / ${Number(collectionSyncSummary.pulled ?? 0)} traidos / ${Number(collectionSyncSummary.conflicts ?? 0)} conflictos</dd></div>
         </dl>
         <div class="button-row">
           <button class="btn btn-secondary" type="button" data-action="backend-health">Comprobar API</button>
           <button class="btn btn-secondary" type="button" data-action="backend-push">Enviar local</button>
           <button class="btn btn-secondary" type="button" data-action="backend-pull">Traer backend</button>
+          <button class="btn btn-secondary" type="button" data-action="backend-sync-collections">Sync colecciones</button>
           <button class="btn btn-secondary" type="button" data-action="backend-backup">Backup backend</button>
           <button class="btn btn-danger" type="button" data-action="backend-seed">Seed backend</button>
         </div>
+        <p class="muted">Sync colecciones fusiona por fecha de actualizacion, conserva local ante conflicto y no propaga borrados todavia.</p>
       </article>
 
       <article class="panel">
