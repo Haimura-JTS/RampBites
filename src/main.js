@@ -1,4 +1,9 @@
-import { createRampBitesApiClient, DEFAULT_API_BASE_URL } from './apiClient.js';
+import {
+  clearStoredBackendAuthToken,
+  createRampBitesApiClient,
+  DEFAULT_API_BASE_URL,
+  setStoredBackendAuthToken
+} from './apiClient.js';
 import {
   hasAdminPin,
   lockAdminSession,
@@ -965,6 +970,83 @@ function bindBackupActions() {
 }
 
 function bindBackendActions() {
+  document.querySelector('[data-action="backend-auth-status"]')?.addEventListener('click', async (event) => {
+    await runBackendAction(event.currentTarget, async (client) => {
+      const auth = await client.authStatus();
+      updateBackendAuthSettings(auth);
+      showToast(auth.enabled ? 'Autenticacion backend activa.' : 'Backend sin usuarios activos.', 'success');
+      router.renderFromHash();
+    });
+  });
+
+  document.querySelector('[data-action="backend-auth-bootstrap"]')?.addEventListener('click', async (event) => {
+    const form = document.querySelector('[data-form="backend-auth"]');
+    const input = formToObject(form);
+    await runBackendAction(event.currentTarget, async (client) => {
+      const result = await client.bootstrapAuth({
+        username: input.backendUsername,
+        password: input.backendPassword
+      });
+      setStoredBackendAuthToken(result.token);
+      updateBackendAuthSettings({
+        enabled: true,
+        hasAdmin: true,
+        currentUser: result.user,
+        lastAuthAt: new Date().toISOString()
+      });
+      showToast('Primer admin backend creado y sesion iniciada.', 'success');
+      router.renderFromHash();
+    });
+  });
+
+  document.querySelector('[data-action="backend-auth-login"]')?.addEventListener('click', async (event) => {
+    const form = document.querySelector('[data-form="backend-auth"]');
+    const input = formToObject(form);
+    await runBackendAction(event.currentTarget, async (client) => {
+      const result = await client.login({
+        username: input.backendUsername,
+        password: input.backendPassword
+      });
+      setStoredBackendAuthToken(result.token);
+      updateBackendAuthSettings({
+        enabled: true,
+        currentUser: result.user,
+        lastAuthAt: new Date().toISOString()
+      });
+      showToast('Sesion backend iniciada.', 'success');
+      router.renderFromHash();
+    });
+  });
+
+  document.querySelector('[data-action="backend-auth-logout"]')?.addEventListener('click', async (event) => {
+    await runBackendAction(event.currentTarget, async (client) => {
+      await client.logout();
+      clearStoredBackendAuthToken();
+      updateBackendAuthSettings({
+        currentUser: null,
+        lastLogoutAt: new Date().toISOString()
+      });
+      showToast('Sesion backend cerrada.', 'success');
+      router.renderFromHash();
+    });
+  });
+
+  document.querySelector('[data-action="backend-auth-create-user"]')?.addEventListener('click', async (event) => {
+    const form = document.querySelector('[data-form="backend-auth"]');
+    const input = formToObject(form);
+    await runBackendAction(event.currentTarget, async (client) => {
+      await client.createUser({
+        username: input.backendNewUsername,
+        password: input.backendNewPassword,
+        role: input.backendRole
+      });
+      const auth = await client.authStatus();
+      updateBackendAuthSettings(auth);
+      showToast('Usuario backend creado.', 'success');
+      router.renderFromHash();
+    });
+  });
+
   document.querySelector('[data-action="backend-health"]')?.addEventListener('click', async (event) => {
     await runBackendAction(event.currentTarget, async (client) => {
       const health = await client.health();
@@ -1091,6 +1173,18 @@ function getBackendBaseUrl() {
 function updateBackendSettings(patch) {
   saveData(applyBackendSettingsPatch(getData(), patch), { mirror: false });
   syncStorageModeLabel();
+}
+
+function updateBackendAuthSettings(authPatch) {
+  const currentAuth = getData().settings?.backend?.auth ?? {};
+  updateBackendSettings({
+    auth: {
+      ...currentAuth,
+      ...authPatch,
+      checked: true,
+      lastCheckedAt: new Date().toISOString()
+    }
+  });
 }
 
 function applyBackendSettingsPatch(data, patch) {

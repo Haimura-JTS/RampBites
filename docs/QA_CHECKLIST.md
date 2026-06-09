@@ -93,6 +93,19 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Restaurar backup.
 - Reset demo con confirmacion.
 
+## Backend y Auth
+
+- Arrancar `npm.cmd run backend`.
+- En Configuracion, comprobar API.
+- Comprobar estado de autenticacion backend.
+- Crear primer admin con contrasena de al menos 6 caracteres.
+- Cerrar sesion backend y confirmar que acciones protegidas fallan sin login.
+- Iniciar sesion backend con admin.
+- Crear usuario `viewer` y confirmar que puede leer pero no crear datos.
+- Crear usuario `operator` y confirmar que puede crear clientes/pedidos pero no ejecutar seed/import.
+- Confirmar que no se puede desactivar el ultimo admin activo.
+- Si se usa `api_mirror`, confirmar que hay sesion backend antes de sincronizar.
+
 ## Responsive y Accesibilidad
 
 - Probar vista estrecha tipo movil.
@@ -105,6 +118,7 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 ## Riesgos Aceptados en MVP
 
 - No hay control de concurrencia multiusuario para reservas.
+- Hay roles backend, pero aun no hay resolucion de conflictos multiusuario.
 - LocalStorage puede borrarse desde el navegador.
 - Backup restaurable vive en el mismo navegador.
 - No sustituye cumplimiento legal alimentario.

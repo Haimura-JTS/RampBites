@@ -1,5 +1,5 @@
-export const APP_VERSION = '0.14.0';
-export const APP_STAGE = 'Etapa 14';
+export const APP_VERSION = '0.15.0';
+export const APP_STAGE = 'Etapa 15';
 export const STORAGE_KEY = 'ramp-bites-control-panel:v1';
 export const BACKUP_KEY = 'ramp-bites-control-panel:backup';
 export const SCHEMA_VERSION = 1;

@@ -17,6 +17,7 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 - Sincronizacion manual LocalStorage/SQLite desde Configuracion y modo API espejo opcional.
 - Seguridad local opcional para operaciones sensibles.
 - Separacion explicita entre stock fisico, reservado y disponible.
+- Autenticacion backend opcional con sesiones y roles cuando existe usuario activo.
 
 ## Capas Actuales
 
@@ -125,6 +126,7 @@ Responsabilidades:
 Archivos:
 
 - `server/api.js`
+- `server/auth.js`
 - `server/server.js`
 - `server/cli.js`
 - `src/apiClient.js`
@@ -136,6 +138,8 @@ Responsabilidades:
 - importar/exportar JSON,
 - crear backups de base,
 - servir reportes desde SQLite,
+- autenticar usuarios backend,
+- aplicar roles `viewer`, `operator` y `admin`,
 - preparar migracion futura a Express.
 - sincronizar datos locales y backend desde la UI, manualmente o en modo API espejo.
 
@@ -194,6 +198,7 @@ Preferencias PWA/UI:
 ramp-bites-control-panel:theme
 ramp-bites-control-panel:kitchen-checklist
 ramp-bites-control-panel:kitchen-timer
+ramp-bites-control-panel:backend-auth-token
 ```
 
 Colecciones:
@@ -229,6 +234,8 @@ Colecciones:
 - Imports con schema futuro se rechazan.
 - El backend usa las mismas reglas de negocio para compras, producciones, recetas, clientes y pedidos.
 - Los backups SQLite se crean antes de import, seed y restore.
+- Si existe usuario backend activo, la API exige Bearer token.
+- Lectura requiere `viewer`, operaciones de negocio `operator`, y acciones destructivas/configuracion `admin`.
 
 ## Preparacion Backend
 
@@ -244,7 +251,8 @@ Estado actual:
 - SQLite local implementado con `node:sqlite`.
 - API REST implementada con `node:http`.
 - UI conectada al backend mediante acciones manuales y modo API espejo opcional.
-- Seguridad local implementada en frontend con PIN admin hasheado; autenticacion backend real queda pendiente.
+- Seguridad local implementada en frontend con PIN admin hasheado.
+- Autenticacion backend implementada con usuarios SQLite, roles y sesiones.
 - Express queda como adaptacion futura para mantener el proyecto sin dependencias externas por ahora.
 
 Ver `docs/BACKEND_PLAN.md`.

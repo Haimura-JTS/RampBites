@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## [Unreleased - Etapa 15] - 2026-06-09
+
+### Added
+
+- Autenticacion backend real en `server/auth.js`.
+- Bootstrap del primer usuario admin desde `/api/auth/bootstrap`.
+- Login/logout con sesiones Bearer token y expiracion.
+- Roles backend `admin`, `operator` y `viewer`.
+- Tabla `backend_sessions` y tabla puente `user_roles`.
+- Proteccion de API cuando existe al menos un usuario activo:
+  - lectura requiere `viewer`,
+  - operaciones de negocio requieren `operator`,
+  - import/seed/settings/backups destructivos requieren `admin`.
+- Endpoints `/api/auth/status`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/me` y `/api/auth/users`.
+- Panel de autenticacion backend en Configuracion.
+- Cliente API con almacenamiento de token en `sessionStorage`.
+- Tests de bootstrap, login, roles, permisos y bloqueo del ultimo admin.
+
+### Changed
+
+- Version visible del proyecto actualizada a `0.15.0`.
+- `APP_STAGE` pasa a Etapa 15.
+- Cache PWA actualizado a `ramp-bites-control-panel-v0.15.0`.
+- CORS backend permite cabecera `Authorization`.
+
+### Notes
+
+- Si no hay usuarios activos, la API sigue abierta para no romper instalaciones locales existentes.
+- En cuanto se crea el primer admin, la API exige autenticacion por token.
+- Sigue pendiente resolver concurrencia multiusuario y conflictos de sincronizacion.
+
 ## [Unreleased - Etapa 14] - 2026-06-09
 
 ### Added
@@ -486,4 +517,5 @@ Durante el desarrollo inicial se usara version `0.x`.
 - `0.12.0`: seguridad local con PIN admin para operaciones sensibles.
 - `0.13.0`: reservas de stock al confirmar pedidos.
 - `0.14.0`: stock fisico, reservado y disponible.
+- `0.15.0`: autenticacion backend con sesiones y roles.
 - `1.0.0`: primera version interna usable con exportacion/importacion y reportes basicos.

@@ -74,6 +74,93 @@ test('backend API expone health, colecciones, escritura, reportes y backup', asy
   }
 });
 
+test('backend auth protege API con sesiones y roles', async () => {
+  const tmpRoot = await mkdtemp(join(tmpdir(), 'ramp-bites-auth-'));
+  const dbPath = join(tmpRoot, 'auth.sqlite');
+  const database = createBackendDatabase(dbPath);
+  seedDatabase(database.open());
+  database.close();
+
+  const api = createApiServer({ dbPath });
+  await api.listen(0, '127.0.0.1');
+  const port = api.address().port;
+  const baseUrl = `http://127.0.0.1:${port}/api`;
+  const publicClient = createRampBitesApiClient(baseUrl, { getToken: () => '' });
+
+  try {
+    const initialStatus = await publicClient.authStatus();
+    assert.equal(initialStatus.enabled, false);
+
+    const bootstrap = await publicClient.bootstrapAuth({
+      username: 'admin',
+      password: 'secreto123'
+    });
+    assert.equal(bootstrap.user.roles.includes('admin'), true);
+    assert.equal(Boolean(bootstrap.token), true);
+
+    const unauthorized = await fetch(`${baseUrl}/products`);
+    assert.equal(unauthorized.status, 401);
+
+    const adminClient = createRampBitesApiClient(baseUrl, { getToken: () => bootstrap.token });
+    const products = await adminClient.list('products');
+    assert.equal(products.length > 0, true);
+    await assert.rejects(
+      () => adminClient.deactivateUser(bootstrap.user.id),
+      /ultimo admin/
+    );
+
+    await adminClient.createUser({
+      username: 'operador',
+      password: 'operador123',
+      role: 'operator'
+    });
+    await adminClient.createUser({
+      username: 'lector',
+      password: 'lector123',
+      role: 'viewer'
+    });
+
+    const operatorLogin = await publicClient.login({
+      username: 'operador',
+      password: 'operador123'
+    });
+    const operatorClient = createRampBitesApiClient(baseUrl, { getToken: () => operatorLogin.token });
+    const createdClient = await operatorClient.create('clients', {
+      name: 'Cliente operador',
+      alias: 'op',
+      channel: CLIENT_CHANNELS.WHATSAPP,
+      contact: 'demo',
+      deliveryZone: 'local',
+      preferences: '',
+      allergies: '',
+      notes: ''
+    });
+    assert.equal(createdClient.item.name, 'Cliente operador');
+
+    await assert.rejects(
+      () => operatorClient.seed(),
+      /Rol requerido: admin/
+    );
+
+    const viewerLogin = await publicClient.login({
+      username: 'lector',
+      password: 'lector123'
+    });
+    const viewerClient = createRampBitesApiClient(baseUrl, { getToken: () => viewerLogin.token });
+    assert.equal((await viewerClient.list('products')).length > 0, true);
+    await assert.rejects(
+      () => viewerClient.create('clients', {
+        name: 'No autorizado',
+        channel: CLIENT_CHANNELS.WHATSAPP
+      }),
+      /Rol requerido: operator/
+    );
+  } finally {
+    await api.close();
+    await rm(tmpRoot, { recursive: true, force: true });
+  }
+});
+
 async function getJson(url) {
   const response = await fetch(url);
   assert.equal(response.ok, true);

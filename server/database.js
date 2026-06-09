@@ -5,6 +5,7 @@ import { COLLECTIONS, SCHEMA_VERSION } from '../src/constants.js';
 import { createEmptyDatabase, migrateDatabase } from '../src/models.js';
 import { createSeedData } from '../src/seed.js';
 import { generateId } from '../src/storage.js';
+import { migrateAuthSchema } from './auth.js';
 import { BACKUP_DIR, DEFAULT_DB_PATH, ensureBackendDirs } from './paths.js';
 
 export const COLLECTION_TABLES = {
@@ -289,6 +290,7 @@ export function migrateSchema(db) {
   `);
 
   db.prepare('INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, ?)').run(1, nowIso());
+  migrateAuthSchema(db);
 }
 
 export function replaceDatabaseData(db, input) {

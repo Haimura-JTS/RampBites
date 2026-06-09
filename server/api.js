@@ -40,6 +40,19 @@ import {
   upsertCollectionItem,
   upsertSettings
 } from './database.js';
+import {
+  authenticateBackendRequest,
+  authorizeBackendRequest,
+  bootstrapBackendAdmin,
+  createBackendUser,
+  deactivateBackendUser,
+  extractBearerToken,
+  getBackendAuthStatus,
+  hasRole,
+  listBackendUsers,
+  loginBackendUser,
+  logoutBackendSession
+} from './auth.js';
 import { DEFAULT_DB_PATH } from './paths.js';
 
 export const API_ENDPOINTS = {
@@ -110,6 +123,12 @@ async function handleRequest(request, response, database) {
     });
   }
 
+  const authContext = authenticateBackendRequest(database.open(), request);
+  if (segments[1] === 'auth') return handleAuth(request, response, database, segments, authContext);
+
+  const authorization = authorizeBackendRequest(database.open(), request, segments, authContext);
+  if (!authorization.ok) return sendJson(response, authorization.status, authorization.payload);
+
   if (segments[1] === 'health') return handleHealth(response, database);
   if (segments[1] === 'data') return handleData(request, response, database);
   if (segments[1] === 'seed') return handleSeed(request, response, database);
@@ -123,6 +142,65 @@ async function handleRequest(request, response, database) {
   if (collection) return handleCollection(request, response, database, collection, segments);
 
   return sendJson(response, 404, { ok: false, error: 'Endpoint no encontrado.' });
+}
+
+async function handleAuth(request, response, database, segments, authContext) {
+  const action = segments[2] ?? 'status';
+  const db = database.open();
+
+  if (action === 'status' && request.method === 'GET') {
+    return sendJson(response, 200, { ok: true, auth: getBackendAuthStatus(db, authContext) });
+  }
+
+  if (action === 'bootstrap' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    const result = bootstrapBackendAdmin(db, body);
+    return sendAuthResult(response, result, 201);
+  }
+
+  if (action === 'login' && request.method === 'POST') {
+    const body = await readJsonBody(request);
+    const result = loginBackendUser(db, body);
+    return sendAuthResult(response, result);
+  }
+
+  if (action === 'logout' && request.method === 'POST') {
+    const result = logoutBackendSession(db, extractBearerToken(request));
+    return sendAuthResult(response, result);
+  }
+
+  if (action === 'me' && request.method === 'GET') {
+    if (!authContext.authenticated) return sendJson(response, 401, { ok: false, error: 'Autenticacion backend requerida.' });
+    return sendJson(response, 200, {
+      ok: true,
+      user: getBackendAuthStatus(db, authContext).currentUser
+    });
+  }
+
+  if (action === 'users' && segments[4] === 'deactivate' && request.method === 'POST') {
+    if (!authContext.authenticated) return sendJson(response, 401, { ok: false, error: 'Autenticacion backend requerida.' });
+    if (!hasRole(authContext.roles, 'admin')) return sendJson(response, 403, { ok: false, error: 'Rol requerido: admin.' });
+    const result = deactivateBackendUser(db, decodeURIComponent(segments[3] ?? ''), authContext.user?.id);
+    return sendAuthResult(response, result);
+  }
+
+  if (action === 'users') {
+    if (!authContext.authenticated) return sendJson(response, 401, { ok: false, error: 'Autenticacion backend requerida.' });
+    if (!hasRole(authContext.roles, 'admin')) return sendJson(response, 403, { ok: false, error: 'Rol requerido: admin.' });
+    if (request.method === 'GET') return sendJson(response, 200, { ok: true, users: listBackendUsers(db) });
+    if (request.method === 'POST') {
+      const body = await readJsonBody(request);
+      const result = createBackendUser(db, body);
+      return sendAuthResult(response, result, 201);
+    }
+  }
+
+  return methodNotAllowed(response);
+}
+
+function sendAuthResult(response, result, successStatus = 200) {
+  if (!result.ok) return sendJson(response, 400, { ok: false, errors: result.errors });
+  return sendJson(response, successStatus, result);
 }
 
 function handleHealth(response, database) {
@@ -353,7 +431,7 @@ function setBaseHeaders(response) {
 function baseHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Cache-Control': 'no-store'
   };

@@ -37,6 +37,7 @@ Estado actual:
 - SQLite implementado con `node:sqlite` de Node 24.
 - Frontend conectado mediante sincronizacion manual y modo API espejo opcional.
 - Seguridad local frontend disponible para operaciones sensibles.
+- Autenticacion backend disponible con usuarios SQLite, sesiones Bearer token y roles.
 - Express queda como adaptacion futura de `server/api.js`.
 
 Capas:
@@ -68,6 +69,8 @@ Capas:
 - `price_history`
 - `users`
 - `roles`
+- `user_roles`
+- `backend_sessions`
 - `audit_log`
 
 Estas tablas ya existen en el schema inicial de `server/database.js`; varias guardan `payload_json` completo para preservar fidelidad con el modelo LocalStorage mientras se normalizan campos gradualmente.
@@ -103,6 +106,14 @@ Estas tablas ya existen en el schema inicial de `server/database.js`; varias gua
 - `GET /api/backups`
 - `POST /api/backups/:id/restore`
 - `GET /api/export/:type`
+- `GET /api/auth/status`
+- `POST /api/auth/bootstrap`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+- `GET /api/auth/users`
+- `POST /api/auth/users`
+- `POST /api/auth/users/:id/deactivate`
 
 ## Migracion Desde LocalStorage
 
@@ -135,15 +146,17 @@ npm.cmd run backend:seed
 Estado actual:
 
 - Existe seguridad local con PIN admin hasheado para evitar acciones accidentales en un solo dispositivo.
-- No existe autenticacion backend real todavia.
-- No hay usuarios, sesiones de servidor ni roles aplicados en API.
+- Existe autenticacion backend real opcional.
+- Mientras no exista ningun usuario activo, la API queda abierta para compatibilidad local.
+- Al crear el primer admin, la API exige `Authorization: Bearer <token>`.
+- Las sesiones se guardan en SQLite como hash de token y tienen expiracion.
+- No se puede desactivar el ultimo admin activo.
 
-Roles sugeridos:
+Roles actuales:
 
 - `admin`: configuracion, backups, importacion, reset.
-- `operaciones`: compras, stock, produccion, lotes.
-- `ventas`: clientes, pedidos, feedback.
-- `consulta`: dashboard y reportes.
+- `operator`: compras, stock, produccion, lotes, clientes, pedidos y feedback.
+- `viewer`: dashboard, reportes y lectura de datos.
 
 No guardar datos sensibles innecesarios. Para clientes, mantener contacto operativo y alergias declaradas solo cuando sea necesario para preparar pedidos.
 

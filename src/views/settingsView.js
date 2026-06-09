@@ -10,6 +10,7 @@ export function renderSettings({ data, actions }) {
   const backend = settings.backend ?? {};
   const security = getSecuritySettings(data);
   const backups = typeof actions?.listBackups === 'function' ? actions.listBackups() : [];
+  const backendAuth = backend.auth ?? {};
 
   return `
     <section class="view-header">
@@ -120,6 +121,38 @@ export function renderSettings({ data, actions }) {
           <button class="btn btn-secondary" type="button" data-action="backend-backup">Backup backend</button>
           <button class="btn btn-danger" type="button" data-action="backend-seed">Seed backend</button>
         </div>
+      </article>
+
+      <article class="panel">
+        <h3>Autenticacion backend</h3>
+        <dl class="summary-list">
+          <div><dt>Estado</dt><dd>${escapeHtml(backendAuth.enabled ? 'activa' : (backendAuth.checked ? 'sin activar' : 'sin comprobar'))}</dd></div>
+          <div><dt>Usuario</dt><dd>${escapeHtml(backendAuth.currentUser?.username ?? 'sin sesion')}</dd></div>
+          <div><dt>Roles</dt><dd>${escapeHtml((backendAuth.currentUser?.roles ?? []).join(', ') || 'sin datos')}</dd></div>
+        </dl>
+        <form class="stack-form compact-form" data-form="backend-auth">
+          <div class="form-row">
+            <label>Usuario<input name="backendUsername" autocomplete="username" value="admin"></label>
+            <label>Contrasena<input name="backendPassword" type="password" autocomplete="current-password" minlength="6"></label>
+          </div>
+          <div class="form-row">
+            <label>Rol nuevo usuario<select name="backendRole">
+              ${option('operator', 'operator')}
+              ${option('viewer', 'viewer')}
+              ${option('admin', 'admin')}
+            </select></label>
+            <label>Usuario nuevo<input name="backendNewUsername" autocomplete="off"></label>
+          </div>
+          <label>Contrasena nuevo usuario<input name="backendNewPassword" type="password" autocomplete="new-password" minlength="6"></label>
+          <div class="button-row">
+            <button class="btn btn-secondary" type="button" data-action="backend-auth-status">Estado auth</button>
+            <button class="btn btn-secondary" type="button" data-action="backend-auth-bootstrap">Crear primer admin</button>
+            <button class="btn btn-secondary" type="button" data-action="backend-auth-login">Login</button>
+            <button class="btn btn-secondary" type="button" data-action="backend-auth-logout">Logout</button>
+            <button class="btn btn-secondary" type="button" data-action="backend-auth-create-user">Crear usuario</button>
+          </div>
+        </form>
+        <p class="muted">Cuando existe al menos un usuario activo, la API exige token Bearer para leer o modificar datos.</p>
       </article>
 
       <article class="panel">

@@ -1,10 +1,10 @@
 # Roadmap
 
-Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 14 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, seguridad local, reservas de stock por pedido y control de stock fisico/reservado/disponible.
+Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 15 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, seguridad local, reservas de stock por pedido, control de stock fisico/reservado/disponible y autenticacion backend con roles.
 
 ## MVP Local
 
-Estado: completado en Etapas 0-14.
+Estado: completado en Etapas 0-15.
 
 Incluye:
 
@@ -44,13 +44,14 @@ Incluye:
 - modo API espejo con carga inicial desde backend y envio automatico de guardados,
 - seguridad local con PIN admin para operaciones sensibles,
 - reservas de stock al confirmar pedidos y conversion a venta al entregar,
-- separacion de stock fisico, reservado y disponible en UI, reportes y CSV.
+- separacion de stock fisico, reservado y disponible en UI, reportes y CSV,
+- autenticacion backend con sesiones Bearer token y roles.
 
 ## Backend
 
 Objetivo: pasar de LocalStorage a Node.js + SQLite y preparar Express.
 
-Estado: base local completada en Etapa 9, sincronizacion manual en Etapa 10 y API espejo en Etapa 11.
+Estado: base local completada en Etapa 9, sincronizacion manual en Etapa 10, API espejo en Etapa 11 y autenticacion backend en Etapa 15.
 
 Incluye:
 
@@ -61,25 +62,26 @@ Incluye:
 - Reutilizar reglas de negocio actuales.
 - Cliente API en `src/apiClient.js`.
 - Modo `api_mirror` desde Configuracion.
+- Auth backend con roles `admin`, `operator`, `viewer`.
 
 Pendiente:
 
 - sincronizacion por coleccion y resolucion de conflictos,
 - instalar/adaptar Express si se acepta dependencia externa,
-- autenticacion,
 - multiusuario.
 
 ## Login / Autenticacion
 
 Objetivo: proteger operaciones sensibles.
 
-Estado: seguridad local completada en Etapa 12; autenticacion backend real pendiente.
+Estado: seguridad local completada en Etapa 12; autenticacion backend real completada en Etapa 15.
 
 Primer alcance:
 
-- usuario admin local,
+- bootstrap de primer admin,
 - sesiones de servidor,
 - proteccion de import/reset/restore en API,
+- roles activos en API,
 - registro de auditoria basico.
 
 ## Multiusuario
