@@ -2,7 +2,7 @@
 
 Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 16 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, sync por coleccion, seguridad local, reservas de stock por pedido, control de stock fisico/reservado/disponible y autenticacion backend con roles.
 
-Decision nueva: la siguiente etapa cambia el stack objetivo a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest. LocalStorage deja de ser base principal y queda solo para preferencias menores.
+Decision nueva: la siguiente etapa cambia el stack objetivo a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest. LocalStorage deja de ser base principal y queda solo para preferencias, configuracion visual, ultimo backup temporal, flags de UI y modo demo.
 
 ## MVP Local
 
@@ -94,6 +94,7 @@ Primer alcance:
 - tests Vitest,
 - export/import JSON inicial.
 - reglas globales de Prompts 2 a 9 aplicadas desde `docs/PROMPTS_2_9_GLOBAL_RULES.md`.
+- no backend nuevo hasta etapa especifica.
 
 ## Login / Autenticacion
 

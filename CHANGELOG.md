@@ -8,6 +8,8 @@
 - Documento `docs/PROMPTS_2_9_GLOBAL_RULES.md` con reglas obligatorias para las etapas posteriores al arranque React/Dexie.
 - Plan de migracion por etapas desde el MVP JS/LocalStorage hacia IndexedDB/Dexie.
 - Reglas de uso de LocalStorage solo para preferencias no criticas.
+- Regla explicita de no implementar backend nuevo hasta una etapa especifica.
+- Aclaracion de Tailwind CSS como opcion solo si se justifica.
 
 ### Changed
 

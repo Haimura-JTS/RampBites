@@ -15,8 +15,8 @@ Construir una app web local-first profesional con:
 - Vite.
 - Dexie.js sobre IndexedDB como persistencia local principal.
 - Zod para validacion de datos antes de guardar.
-- Vitest para pruebas de calculos y servicios de dominio.
-- CSS modular o CSS organizado por componentes.
+- Vitest para pruebas de calculos y logica critica.
+- CSS modular, CSS tradicional organizado o Tailwind CSS solo si se justifica.
 - Arquitectura preparada para PWA futura.
 - Arquitectura preparada para backend futuro con Node.js, Express, Prisma y SQLite/PostgreSQL.
 
@@ -26,8 +26,10 @@ LocalStorage queda limitado a:
 
 - preferencias simples de usuario,
 - tema visual,
-- ultima pantalla visitada,
-- configuracion menor no critica.
+- ultimo backup temporal,
+- flags de UI,
+- modo demo,
+- ultima pantalla visitada.
 
 ## Datos en IndexedDB
 
@@ -52,6 +54,8 @@ Stores minimos:
 - `settings`
 - `backups`
 - `reportCache`
+
+La configuracion principal exportable del negocio debe guardarse en `settings`, no en LocalStorage.
 
 ## Estructura Objetivo
 
@@ -119,19 +123,14 @@ Stores minimos:
 /src/pages/ReportsPage.tsx
 /src/pages/SettingsPage.tsx
 
-/src/components/layout/AppLayout.tsx
-/src/components/layout/Sidebar.tsx
-/src/components/layout/Header.tsx
-
-/src/components/ui/Button.tsx
-/src/components/ui/Input.tsx
-/src/components/ui/Select.tsx
-/src/components/ui/Card.tsx
-/src/components/ui/Table.tsx
-/src/components/ui/Modal.tsx
-/src/components/ui/Toast.tsx
-/src/components/ui/Badge.tsx
-/src/components/ui/Tabs.tsx
+/src/components/Layout.tsx
+/src/components/Nav.tsx
+/src/components/Table.tsx
+/src/components/FormField.tsx
+/src/components/Modal.tsx
+/src/components/Toast.tsx
+/src/components/Badge.tsx
+/src/components/Card.tsx
 
 /src/styles/global.css
 /src/styles/theme.css
@@ -174,6 +173,8 @@ npm install lucide-react
 9. Antes de modificar datos criticos, crear backup interno si corresponde.
 10. El proyecto debe poder ejecutarse con `npm install` y `npm run dev`.
 11. Los tests deben ejecutarse con `npm run test`.
+12. Mantener la app funcional offline.
+13. No implementar backend nuevo hasta que se solicite una etapa especifica.
 
 ## Estrategia de Migracion
 
@@ -225,3 +226,4 @@ npm install lucide-react
 - IndexedDB requiere flujos async en UI y servicios.
 - Las transacciones Dexie deben proteger operaciones de stock conectadas.
 - La app actual seguira funcionando hasta que la version React/Dexie alcance paridad minima.
+- No conviene activar Tailwind salvo que simplifique claramente el sistema visual.

@@ -6,7 +6,7 @@ Etapa cerrada: **ETAPA 16 - Sincronizacion por coleccion y conflictos basicos**.
 
 Decision nueva registrada: **migracion tecnologica a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest**.
 
-Instruccion global nueva registrada: **Prompts 2 a 9 deben mantener React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest, con calculos en `src/utils/calculations.ts` y datos importantes en Dexie**.
+Instruccion global nueva registrada: **Prompts 2 a 9 deben mantener React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest, con calculos en `src/utils/calculations.ts`, datos importantes en Dexie y sin backend nuevo salvo etapa especifica**.
 
 Fecha: 2026-06-09.
 
@@ -80,7 +80,8 @@ Objetivo recomendado:
 - crear app shell React con paginas placeholder,
 - cargar seed inicial en IndexedDB,
 - implementar export/import JSON inicial,
-- dejar LocalStorage solo para preferencias no criticas,
+- dejar LocalStorage solo para preferencias simples, configuracion visual, ultimo backup temporal, flags de UI y modo demo,
+- no implementar backend nuevo en esta etapa,
 - mantener el MVP legacy como referencia hasta tener paridad minima.
 
 ## Riesgos o Bugs Pendientes

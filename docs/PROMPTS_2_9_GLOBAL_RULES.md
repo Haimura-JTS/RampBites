@@ -12,10 +12,13 @@ Todas las etapas deben continuar usando:
 - Dexie.js / IndexedDB.
 - Zod.
 - Vitest.
+- CSS modular, CSS tradicional organizado o Tailwind CSS solo si se justifica.
 
 No volver a HTML/CSS/JavaScript puro como arquitectura principal.
 
 No usar LocalStorage como almacenamiento principal. Usar Dexie/IndexedDB para los datos importantes.
+
+LocalStorage solo puede guardar preferencias simples, configuracion visual, ultimo backup temporal, flags de UI y modo demo.
 
 ## Arquitectura Obligatoria
 
@@ -45,6 +48,7 @@ Cada nueva funcionalidad debe respetar esta separacion:
 8. Agregar tests si la etapa toca calculos, stock, recetas, pedidos o produccion.
 9. Actualizar documentacion.
 10. No avanzar a la siguiente etapa.
+11. No implementar backend salvo que se solicite una etapa especifica.
 
 ## Reglas de Datos
 

@@ -7,7 +7,7 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 - UI en espanol.
 - MVP actual con LocalStorage como persistencia historica.
 - Siguiente arquitectura local-first con Dexie.js sobre IndexedDB como persistencia principal.
-- LocalStorage solo para preferencias simples no criticas.
+- LocalStorage solo para preferencias simples, configuracion visual, ultimo backup temporal, flags de UI y modo demo.
 - Logica de negocio separada de la interfaz.
 - Stock derivado de movimientos trazables.
 - Datos seed editables.
@@ -31,7 +31,7 @@ La siguiente etapa debe migrar la base frontend a:
 - Vite para desarrollo y build.
 - Dexie.js sobre IndexedDB para persistencia real local-first.
 - Zod para validar entradas antes de guardar.
-- Vitest para calculos y servicios de dominio.
+- Vitest para calculos y logica critica.
 
 Reglas clave:
 
@@ -41,6 +41,7 @@ Reglas clave:
 - Mantener calculos puros en `src/utils/calculations.ts`.
 - Mantener pantallas libres de logica compleja de negocio.
 - Crear export/import JSON desde IndexedDB.
+- No implementar backend nuevo hasta que se solicite una etapa especifica.
 
 Ver `docs/TECH_STACK_MIGRATION.md`.
 

@@ -53,12 +53,12 @@ A partir de la proxima etapa, el stack objetivo pasa a ser:
 - Vite.
 - Dexie.js sobre IndexedDB como persistencia local principal.
 - Zod para validacion de datos antes de guardar.
-- Vitest para pruebas de calculos y servicios de dominio.
-- CSS modular o CSS organizado por componentes.
+- Vitest para pruebas de calculos y logica critica.
+- CSS modular, CSS tradicional organizado o Tailwind CSS solo si se justifica.
 - Arquitectura preparada para PWA futura.
 - Arquitectura preparada para backend futuro con Node.js, Express, Prisma y SQLite/PostgreSQL.
 
-No se debe usar LocalStorage como base de datos principal. LocalStorage queda limitado a preferencias simples, tema visual, ultima pantalla visitada y configuracion menor no critica.
+No se debe usar LocalStorage como base de datos principal. LocalStorage queda limitado a preferencias simples, configuracion visual, ultimo backup temporal, flags de UI y modo demo. Los datos importantes deben vivir en IndexedDB mediante Dexie.
 
 Ver plan detallado en `docs/TECH_STACK_MIGRATION.md` y reglas globales para Prompts 2 a 9 en `docs/PROMPTS_2_9_GLOBAL_RULES.md`.
 
@@ -122,6 +122,8 @@ Cada entidad tendra:
 - `status`: activo, standby, archivado, pendiente, completado o descartado segun entidad.
 
 En la migracion React/Dexie estas colecciones se separaran en stores IndexedDB, incluyendo `purchaseItems`, `productionInputs`, `recipeIngredients` y `orderItems` como tablas propias cuando aporte trazabilidad y consultas mas claras.
+
+Tambien deben vivir en IndexedDB los reportes/cache cuando haga falta y la configuracion principal exportable del negocio.
 
 ## Reglas de Stock
 
