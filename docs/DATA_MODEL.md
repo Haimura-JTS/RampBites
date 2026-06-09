@@ -2,7 +2,7 @@
 
 Modelo de datos inicial para Ramp Bites Control Panel.
 
-Este documento define las colecciones y entidades previstas para la primera version local-first. La implementacion inicial usara LocalStorage, pero el modelo debe poder migrar despues a IndexedDB, SQLite o backend Node.js.
+Este documento define las colecciones y entidades previstas para la version local-first. El MVP actual usa LocalStorage, pero la siguiente base tecnica debe migrar la persistencia principal a IndexedDB mediante Dexie.js. El modelo debe seguir preparado para backend futuro con Node.js, Express, Prisma y SQLite/PostgreSQL.
 
 ## Database
 

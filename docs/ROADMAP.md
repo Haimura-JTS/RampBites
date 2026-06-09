@@ -2,6 +2,8 @@
 
 Roadmap vivo de Ramp Bites Control Panel. Las etapas 0 a 16 dejan un MVP local usable, instalable, probado, con backend SQLite, sincronizacion manual, modo API espejo opcional, sync por coleccion, seguridad local, reservas de stock por pedido, control de stock fisico/reservado/disponible y autenticacion backend con roles.
 
+Decision nueva: la siguiente etapa cambia el stack objetivo a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest. LocalStorage deja de ser base principal y queda solo para preferencias menores.
+
 ## MVP Local
 
 Estado: completado en Etapas 0-16.
@@ -70,8 +72,28 @@ Pendiente:
 
 - tombstones para borrados,
 - resolucion manual de conflictos,
-- instalar/adaptar Express si se acepta dependencia externa,
+- migrar frontend a Dexie/IndexedDB antes de seguir ampliando modulos,
+- instalar/adaptar Express y Prisma,
 - multiusuario.
+
+## Migracion React/Dexie
+
+Objetivo: reemplazar progresivamente la base frontend JS/LocalStorage por React, TypeScript, Vite, Dexie, Zod y Vitest.
+
+Estado: pendiente para Etapa 17.
+
+Primer alcance:
+
+- app shell React,
+- rutas/paginas base,
+- Dexie schema inicial,
+- seed reproducible en IndexedDB,
+- tipos TypeScript,
+- schemas Zod,
+- calculos puros migrados,
+- tests Vitest,
+- export/import JSON inicial.
+- reglas globales de Prompts 2 a 9 aplicadas desde `docs/PROMPTS_2_9_GLOBAL_RULES.md`.
 
 ## Login / Autenticacion
 

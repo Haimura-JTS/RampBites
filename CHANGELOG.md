@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [Unreleased - Decision tecnologica] - 2026-06-09
+
+### Added
+
+- Documento `docs/TECH_STACK_MIGRATION.md` con el stack objetivo React + TypeScript + Vite + Dexie + Zod + Vitest.
+- Documento `docs/PROMPTS_2_9_GLOBAL_RULES.md` con reglas obligatorias para las etapas posteriores al arranque React/Dexie.
+- Plan de migracion por etapas desde el MVP JS/LocalStorage hacia IndexedDB/Dexie.
+- Reglas de uso de LocalStorage solo para preferencias no criticas.
+
+### Changed
+
+- README diferencia el MVP actual del stack objetivo obligatorio para la siguiente etapa.
+- Roadmap y arquitectura pasan a tratar React/Dexie como la proxima direccion tecnica.
+- La ruta obligatoria de calculos queda fijada en `src/utils/calculations.ts`.
+
 ## [Unreleased - Etapa 16] - 2026-06-09
 
 ### Added

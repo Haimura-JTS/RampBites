@@ -5,19 +5,44 @@ Ramp Bites Control Panel es una app web local-first para gestion interna de prod
 ## Principios
 
 - UI en espanol.
-- LocalStorage como persistencia inicial.
+- MVP actual con LocalStorage como persistencia historica.
+- Siguiente arquitectura local-first con Dexie.js sobre IndexedDB como persistencia principal.
+- LocalStorage solo para preferencias simples no criticas.
 - Logica de negocio separada de la interfaz.
 - Stock derivado de movimientos trazables.
 - Datos seed editables.
 - Calculos centralizados y testeables.
 - Backups antes de operaciones destructivas.
-- Migracion futura a IndexedDB, SQLite o backend Node.js.
+- Migracion tecnica a React, TypeScript, Vite, Dexie, Zod y Vitest.
+- Backend futuro preparado para Node.js, Express, Prisma y SQLite/PostgreSQL.
 - PWA instalable con app shell cacheada para uso offline del panel.
 - Backend SQLite local disponible como capa paralela al frontend local-first.
 - Sincronizacion manual LocalStorage/SQLite, sync por coleccion y modo API espejo opcional desde Configuracion.
 - Seguridad local opcional para operaciones sensibles.
 - Separacion explicita entre stock fisico, reservado y disponible.
 - Autenticacion backend opcional con sesiones y roles cuando existe usuario activo.
+
+## Decision Tecnica Objetivo
+
+La siguiente etapa debe migrar la base frontend a:
+
+- React para componentes y estado de UI.
+- TypeScript para tipos de entidades, servicios y repositorios.
+- Vite para desarrollo y build.
+- Dexie.js sobre IndexedDB para persistencia real local-first.
+- Zod para validar entradas antes de guardar.
+- Vitest para calculos y servicios de dominio.
+
+Reglas clave:
+
+- No usar LocalStorage como base de datos principal.
+- Centralizar Dexie en `src/db/db.ts`.
+- Acceder a datos mediante repositorios.
+- Mantener calculos puros en `src/utils/calculations.ts`.
+- Mantener pantallas libres de logica compleja de negocio.
+- Crear export/import JSON desde IndexedDB.
+
+Ver `docs/TECH_STACK_MIGRATION.md`.
 
 ## Capas Actuales
 
@@ -245,12 +270,15 @@ Colecciones:
 
 ## Preparacion Backend
 
-La UI no debe llamar directamente a LocalStorage. Para migrar:
+La UI no debe llamar directamente a LocalStorage ni a Dexie sin repositorios. Para migrar:
 
-1. Sustituir `src/storage.js` por cliente API o repositorio IndexedDB.
-2. Mantener `calculations.js`, `reports.js` y reglas de negocio.
-3. Mover servicios de dominio al backend de forma progresiva.
-4. Migrar JSON exportado a SQLite.
+1. Crear capa Dexie en `src/db/db.ts`.
+2. Crear tipos TypeScript en `src/types/`.
+3. Crear schemas Zod en `src/schemas/`.
+4. Migrar calculos a `src/utils/calculations.ts`.
+5. Crear servicios por modulo en `src/services/`.
+6. Mantener export/import JSON para mover datos del MVP actual a IndexedDB.
+7. Preparar backend futuro con Prisma y API REST.
 
 Estado actual:
 
@@ -261,5 +289,6 @@ Estado actual:
 - Seguridad local implementada en frontend con PIN admin hasheado.
 - Autenticacion backend implementada con usuarios SQLite, roles y sesiones.
 - Express queda como adaptacion futura para mantener el proyecto sin dependencias externas por ahora.
+- Decision nueva: React/Dexie sera la base local principal antes de crecer mas funcionalidades.
 
 Ver `docs/BACKEND_PLAN.md`.

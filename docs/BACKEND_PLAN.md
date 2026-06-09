@@ -1,6 +1,6 @@
 # Backend Plan
 
-Plan de migracion de Ramp Bites Control Panel desde LocalStorage a backend local/profesional. La base local SQLite ya existe desde Etapa 9.
+Plan de migracion de Ramp Bites Control Panel desde MVP LocalStorage y futura base IndexedDB/Dexie hacia backend local/profesional. La base local SQLite ya existe desde Etapa 9, pero la direccion nueva del frontend es Dexie + IndexedDB.
 
 ## Objetivo
 
@@ -8,7 +8,9 @@ Mantener la app local-first mientras el negocio valida procesos, y abrir una rut
 
 - Node.js
 - Express
-- SQLite
+- Prisma
+- SQLite inicialmente
+- PostgreSQL si escala
 - API REST
 - autenticacion
 - multiusuario
@@ -21,14 +23,15 @@ La regla central no cambia: el stock se deriva de movimientos y los costes se ca
 ## Arquitectura Propuesta
 
 ```txt
-frontend HTML/CSS/JS
+frontend React/TypeScript/Dexie
   |
   | REST JSON
   v
-Node.js API REST
+Node.js + Express API REST
   |
+  | Prisma
   v
-SQLite
+SQLite / PostgreSQL
 ```
 
 Estado actual:
@@ -39,12 +42,13 @@ Estado actual:
 - Seguridad local frontend disponible para operaciones sensibles.
 - Autenticacion backend disponible con usuarios SQLite, sesiones Bearer token y roles.
 - Express queda como adaptacion futura de `server/api.js`.
+- Decision nueva: el frontend debe migrar primero a IndexedDB/Dexie para que el backend futuro nazca desde un modelo local mas solido.
 
 Capas:
 
 - `api`: rutas REST y validacion de entrada.
 - `services`: reglas de negocio, costes, stock, produccion y pedidos.
-- `repositories`: consultas SQLite.
+- `repositories`: consultas SQLite actuales y repositorios Prisma futuros.
 - `migrations`: versionado de schema.
 - `backups`: copia de `.sqlite`, export JSON y restauracion.
 - `auth`: login, sesiones y roles.
@@ -116,14 +120,16 @@ Estas tablas ya existen en el schema inicial de `server/database.js`; varias gua
 - `POST /api/auth/users/:id/deactivate`
 - `POST /api/sync/:collection`
 
-## Migracion Desde LocalStorage
+## Migracion Desde LocalStorage e IndexedDB
 
 1. Exportar JSON desde Configuracion.
 2. Validar `schemaVersion`.
-3. Ejecutar migrador a schema SQLite actual.
-4. Insertar datos en transaccion.
-5. Recalcular reportes derivados.
-6. Comparar totales clave:
+3. Importar a IndexedDB/Dexie usando schemas Zod y migraciones Dexie.
+4. Exportar JSON normalizado desde Dexie.
+5. Ejecutar migrador a schema SQLite/Prisma futuro.
+6. Insertar datos en transaccion.
+7. Recalcular reportes derivados.
+8. Comparar totales clave:
    - stock por producto,
    - stock por lote,
    - compras totales,
@@ -213,6 +219,8 @@ Futuro:
 - La resolucion de conflictos es local-first y no manual.
 - La seguridad local no protege contra manipulacion directa de LocalStorage.
 - API HTTP nativa pendiente de adaptar a Express si se acepta dependencia.
+- Prisma aun no esta implementado.
+- La migracion a Dexie debe mantener export/import JSON compatible.
 
 ## Reglas Que Deben Sobrevivir
 

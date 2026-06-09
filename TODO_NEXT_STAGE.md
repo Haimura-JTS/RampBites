@@ -4,6 +4,10 @@
 
 Etapa cerrada: **ETAPA 16 - Sincronizacion por coleccion y conflictos basicos**.
 
+Decision nueva registrada: **migracion tecnologica a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest**.
+
+Instruccion global nueva registrada: **Prompts 2 a 9 deben mantener React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest, con calculos en `src/utils/calculations.ts` y datos importantes en Dexie**.
+
 Fecha: 2026-06-09.
 
 ## Completado
@@ -25,6 +29,9 @@ Fecha: 2026-06-09.
 - La UI guarda resumen y conflictos en `settings.backend.collectionSync`.
 - Version actualizada a `0.16.0`, `APP_STAGE` a Etapa 16 y cache PWA a `0.16.0`.
 - Se amplio la cobertura de tests para merge, conflictos, sync y endpoint backend.
+- Se registro el cambio tecnologico para no seguir creciendo el MVP en JavaScript plano con LocalStorage como base principal.
+- Se creo `docs/TECH_STACK_MIGRATION.md` con estructura objetivo, stores Dexie, reglas tecnicas y fases de migracion.
+- Se creo `docs/PROMPTS_2_9_GLOBAL_RULES.md` con reglas obligatorias para tipos, Zod, servicios, paginas, Dexie, stock, produccion, recetas, pedidos, tests y documentacion.
 
 ## Archivos Modificados
 
@@ -44,6 +51,14 @@ Fecha: 2026-06-09.
 - `tests/backendSync.test.js`
 - `tests/pwa.test.js`
 - `tests/settingsBackend.test.js`
+- `docs/ARCHITECTURE.md`
+- `docs/BACKEND_PLAN.md`
+- `docs/DATA_MODEL.md`
+- `docs/INDEX.md`
+- `docs/QA_CHECKLIST.md`
+- `docs/ROADMAP.md`
+- `docs/TECH_STACK_MIGRATION.md`
+- `docs/PROMPTS_2_9_GLOBAL_RULES.md`
 
 ## Verificacion
 
@@ -52,21 +67,28 @@ Fecha: 2026-06-09.
 
 ## Etapa Siguiente
 
-No hay siguiente prompt obligatorio definido.
+**ETAPA 17 - Migracion tecnologica base a React + TypeScript + Vite + Dexie**.
 
-Opciones razonables para una proxima etapa:
+Objetivo recomendado:
 
-- implementar tombstones o `deletedAt` para sincronizar borrados,
-- crear UI de auditoria visible para conflictos y acciones backend,
-- permitir resolver conflictos manualmente en vez de resolver siempre local-first,
-- bloquear/transaccionar reservas multiusuario,
-- adaptar `server/api.js` a Express si se acepta dependencia,
-- gestionar usuarios backend con UI completa.
+- crear base Vite React TS,
+- instalar Dexie, Zod y Vitest,
+- crear `src/db/db.ts`, schema Dexie, seed y migraciones,
+- crear tipos TypeScript de dominio,
+- crear schemas Zod,
+- migrar calculos puros a `src/utils/calculations.ts`,
+- crear app shell React con paginas placeholder,
+- cargar seed inicial en IndexedDB,
+- implementar export/import JSON inicial,
+- dejar LocalStorage solo para preferencias no criticas,
+- mantener el MVP legacy como referencia hasta tener paridad minima.
 
 ## Riesgos o Bugs Pendientes
 
 - La sync por coleccion conserva local ante conflicto; no hay resolucion manual aun.
 - Los borrados no se sincronizan hasta definir tombstones.
+- El MVP actual aun usa LocalStorage como base principal; la siguiente etapa debe migrar a Dexie/IndexedDB.
+- La migracion React/Dexie debe cuidar compatibilidad de export JSON para no perder datos existentes.
 - Si dos navegadores usan `api_mirror`, todavia pueden pisarse cambios por reemplazo completo de dataset.
 - Las sesiones backend se guardan en `sessionStorage`; al cerrar pestana hay que iniciar sesion de nuevo.
 - La API se mantiene abierta si no existe ningun usuario activo para conservar compatibilidad local.

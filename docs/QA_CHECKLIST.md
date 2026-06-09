@@ -10,6 +10,16 @@ Checklist manual para validar Ramp Bites Control Panel antes de usarlo con datos
 - Confirmar que no hay errores visibles de carga.
 - Confirmar que la navegacion cambia de vista.
 
+## Migracion React/Dexie
+
+- Confirmar que la nueva etapa usa React + TypeScript + Vite.
+- Confirmar que la persistencia principal esta en IndexedDB mediante Dexie.
+- Confirmar que LocalStorage solo guarda preferencias no criticas.
+- Confirmar que los formularios principales validan con Zod antes de guardar.
+- Confirmar que los calculos corren con Vitest.
+- Confirmar que export/import JSON funciona desde Dexie.
+- Confirmar que el seed inicial es reproducible.
+
 ## Productos
 
 - Crear producto.

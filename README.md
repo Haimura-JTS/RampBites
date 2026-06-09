@@ -40,20 +40,27 @@ No se debe producir mas carne de la proyectada para 2 dias.
 
 ## Stack Tecnico
 
-- HTML5.
-- CSS3.
-- JavaScript moderno con modulos ES.
-- LocalStorage como persistencia inicial.
-- Node.js para servidor local, pruebas y backend API.
-- Arquitectura preparada para migrar a IndexedDB, SQLite o backend Node.js.
-- Sin Vite por ahora; se usa un servidor estatico propio sin dependencias.
-- Sin frameworks pesados en la primera version.
-- PWA con `manifest.json` y service worker para shell offline.
-- Backend local con `node:http` y `node:sqlite` de Node 24.
-- API REST preparada para migrar a Express si se acepta esa dependencia.
-- Puente frontend/backend mediante `src/apiClient.js`, `src/sync.js`, controles de sincronizacion manual, sync por coleccion y modo API espejo opcional.
-- Seguridad local opcional mediante PIN admin hasheado y sesion en `sessionStorage`.
-- Autenticacion backend opcional con usuarios SQLite, sesiones Bearer token y roles `admin`, `operator`, `viewer`.
+### Estado actual del MVP
+
+La implementacion actual hasta Etapa 16 sigue siendo el MVP funcional construido en HTML, CSS, JavaScript modular, LocalStorage y backend SQLite local. Se mantiene como base operativa y fuente de exportacion JSON durante la migracion.
+
+### Decision tecnica para la siguiente etapa
+
+A partir de la proxima etapa, el stack objetivo pasa a ser:
+
+- React.
+- TypeScript.
+- Vite.
+- Dexie.js sobre IndexedDB como persistencia local principal.
+- Zod para validacion de datos antes de guardar.
+- Vitest para pruebas de calculos y servicios de dominio.
+- CSS modular o CSS organizado por componentes.
+- Arquitectura preparada para PWA futura.
+- Arquitectura preparada para backend futuro con Node.js, Express, Prisma y SQLite/PostgreSQL.
+
+No se debe usar LocalStorage como base de datos principal. LocalStorage queda limitado a preferencias simples, tema visual, ultima pantalla visitada y configuracion menor no critica.
+
+Ver plan detallado en `docs/TECH_STACK_MIGRATION.md` y reglas globales para Prompts 2 a 9 en `docs/PROMPTS_2_9_GLOBAL_RULES.md`.
 
 ## Idioma, Moneda y Unidades
 
@@ -85,7 +92,7 @@ No se debe producir mas carne de la proyectada para 2 dias.
 
 ## Modelo de Datos Inicial
 
-Los datos se guardaran como colecciones versionadas en LocalStorage:
+Durante el MVP actual, los datos se guardan como colecciones versionadas en LocalStorage:
 
 ```js
 {
@@ -113,6 +120,8 @@ Cada entidad tendra:
 - `updatedAt`: fecha ISO.
 - `notes`: notas opcionales cuando aplique.
 - `status`: activo, standby, archivado, pendiente, completado o descartado segun entidad.
+
+En la migracion React/Dexie estas colecciones se separaran en stores IndexedDB, incluyendo `purchaseItems`, `productionInputs`, `recipeIngredients` y `orderItems` como tablas propias cuando aporte trazabilidad y consultas mas claras.
 
 ## Reglas de Stock
 
@@ -305,6 +314,8 @@ Alertas de precio:
 
 ## Estructura Propuesta
 
+La estructura actual corresponde al MVP legacy. La estructura objetivo React/TypeScript/Dexie esta documentada en `docs/TECH_STACK_MIGRATION.md` y debe guiar la siguiente etapa.
+
 ```txt
 /index.html
 /manifest.json
@@ -400,7 +411,8 @@ Alertas de precio:
 - **Etapa 14**: stock fisico, reservado y disponible en UI, reportes y CSV. **Completada**.
 - **Etapa 15**: autenticacion backend real con sesiones y roles activos en API/UI. **Completada**.
 - **Etapa 16**: sincronizacion por coleccion y conflictos basicos LocalStorage/SQLite. **Completada**.
-- **Etapa 17+**: multiusuario, tombstones de borrado, auditoria visible y mejoras avanzadas.
+- **Etapa 17**: migracion tecnologica a React + TypeScript + Vite + Dexie/IndexedDB + Zod + Vitest. **Siguiente**.
+- **Etapa 18+**: paridad funcional por modulos, tombstones de borrado, auditoria visible, PWA futura y backend Prisma.
 
 ## Continuidad
 
@@ -413,6 +425,8 @@ Antes de cada etapa se deben leer:
 No avanzar a una etapa nueva sin peticion explicita.
 
 ## Como Ejecutar
+
+Modo actual MVP legacy:
 
 ```bash
 npm.cmd run dev
@@ -431,6 +445,14 @@ npm.cmd test
 ```
 
 Nota Windows: `npm test` puede quedar bloqueado por la politica de ejecucion de PowerShell; `npm.cmd test` evita ese problema.
+
+Modo objetivo tras la migracion React/Vite:
+
+```bash
+npm install
+npm run dev
+npm run test
+```
 
 ## Backend SQLite
 
